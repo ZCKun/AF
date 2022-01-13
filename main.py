@@ -1,16 +1,30 @@
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+from A import AFramework, CTPStrategy, logger
+from A.types import KLine
+from A.types.ctp import Snapshot
 
 
-# Press the green button in the gutter to run the script.
+class Strategy(CTPStrategy):
+    def __init__(self):
+        super().__init__()
+        self.sub_instrument_id = ['IF2201', 'IH2201']
+
+    def on_bar(self, bar: KLine):
+        logger.debug(bar)
+
+    def on_snapshot(self, tick: Snapshot):
+        logger.debug(tick)
+
+
+def main():
+    a = AFramework("ctp_config.yaml")
+
+    my_s = Strategy()
+    a.docking(my_s)
+    a.start()
+
+
 if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass

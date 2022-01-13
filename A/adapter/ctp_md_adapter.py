@@ -4,10 +4,13 @@ import time
 import yaml
 import pandas as pd
 
+from A.types import Price, EventType, Event
+from A.types.ctp import Snapshot
 from numpy import char as nchar
 from datetime import datetime
 from ctpwrapper import MdApiPy, ApiStructure
 from ctpwrapper.ApiStructure import DepthMarketDataField
+from multiprocessing import Queue
 
 from A.log import logger
 from A.data import KLineHandle
@@ -18,10 +21,10 @@ TODAY_DT_STR = TODAY_DT.strftime('%Y%m%d')
 
 class MarketSpi(MdApiPy):
 
-    def __init__(self, config: dict, queue, *args, **kwargs):
+    def __init__(self, config: dict, queue: Queue, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._login = False
-        self._queue = queue
+        self._queue: Queue = queue
 
         self._broker_id = config["broker_id"]
         self._investor_id = config["investor_id"]
@@ -33,11 +36,16 @@ class MarketSpi(MdApiPy):
 
         self._request_id = 0
         self._source_cache = {}
-        self._kline_handle = KLineHandle(self._instrument_id)
-        self._kline_handle.subscribe(self.on_bar)
+        self._kline_handle_map: dict[str, KLineHandle] = dict()
+
+    def is_login(self) -> bool:
+        return self._login
 
     def on_bar(self, bar):
-        self._queue.put(bar)
+        event = Event()
+        event.event_type = EventType.KLINE_DATA
+        event.data = bar
+        self._queue.put(event)
 
     @property
     def request_id(self):
@@ -51,6 +59,7 @@ class MarketSpi(MdApiPy):
         """
         :return:
         """
+        logger.debug("<CTP> front address connected, start login.")
         user_login = ApiStructure.ReqUserLoginField(BrokerID=self._broker_id,
                                                     UserID=self._investor_id,
                                                     Password=self._password)
@@ -88,33 +97,54 @@ class MarketSpi(MdApiPy):
         :return:
         """
         symbol_code = depth_market_data.InstrumentID
-        if symbol_code != self._instrument_id:
-            return
 
-        open_price = round(depth_market_data.OpenPrice, 3)
-        close_price = round(float(depth_market_data.ClosePrice), 1)
-        high_price = round(depth_market_data.HighestPrice, 3)
-        low_price = round(depth_market_data.LowestPrice, 3)
-        volume = depth_market_data.Volume
-        turnover = depth_market_data.Turnover
-        open_interest = depth_market_data.OpenInterest
-        update_time = depth_market_data.UpdateTime
-        update_mil = depth_market_data.UpdateMillisec
-        last_price = round(depth_market_data.LastPrice, 3)
+        tick_data = Snapshot()
+        tick_data.instrument_id = depth_market_data.InstrumentID
+        tick_data.last_price = Price(depth_market_data.LastPrice)
+        tick_data.open_price = Price(depth_market_data.OpenPrice)
+        tick_data.high_price = Price(depth_market_data.HighestPrice)
+        tick_data.low_price = Price(depth_market_data.LowestPrice)
+        tick_data.close_price = Price(depth_market_data.ClosePrice)
+        tick_data.open_interest = depth_market_data.OpenInterest
+        tick_data.update_time = depth_market_data.UpdateTime
+        tick_data.update_ms = depth_market_data.UpdateMillisec
+        tick_data.volume = depth_market_data.Volume
+        tick_data.turnover = Price(depth_market_data.Turnover)
 
-        # print(
-        # f"UpdateTime:{update_time}.{update_mil}, 股票代码:{symbol_code}, 开盘价:{open_price}, 最高价:{high_price}, 最低价:{low_price}, 最新价:{last_price}, "
-        # f"量:{volume}, 成交金额:{turnover}, 持仓量:{open_interest}")
+        tick_data.bid1_price = Price(depth_market_data.BidPrice1)
+        tick_data.bid1_volume = depth_market_data.BidVolume1
+        tick_data.bid2_price = Price(depth_market_data.BidPrice2)
+        tick_data.bid2_volume = depth_market_data.BidVolume2
+        tick_data.bid3_price = Price(depth_market_data.BidPrice3)
+        tick_data.bid3_volume = depth_market_data.BidVolume3
+        tick_data.bid4_price = Price(depth_market_data.BidPrice4)
+        tick_data.bid4_volume = depth_market_data.BidVolume4
+        tick_data.bid5_price = Price(depth_market_data.BidPrice5)
+        tick_data.bid5_volume = depth_market_data.BidVolume5
+
+        tick_data.ask1_price = Price(depth_market_data.AskPrice1)
+        tick_data.ask1_volume = depth_market_data.AskVolume1
+        tick_data.ask2_price = Price(depth_market_data.AskPrice2)
+        tick_data.ask2_volume = depth_market_data.AskVolume2
+        tick_data.ask3_price = Price(depth_market_data.AskPrice3)
+        tick_data.ask3_volume = depth_market_data.AskVolume3
+        tick_data.ask4_price = Price(depth_market_data.AskPrice4)
+        tick_data.ask4_volume = depth_market_data.AskVolume4
+        tick_data.ask5_price = Price(depth_market_data.AskPrice5)
+        tick_data.ask5_volume = depth_market_data.AskVolume5
+
+        event = Event()
+        event.event_type = EventType.SNAPSHOT_DATA
+        event.data = tick_data
+        self._queue.put(event)
+
         df = pd.DataFrame([depth_market_data.to_dict()])
         if symbol_code in self._source_cache:
             self._source_cache[symbol_code].append(df)
         else:
             self._source_cache[symbol_code] = [df]
-        self._kline_handle.do(self.message_process(df))
 
-        '''
-        {'start_datetime': datetime.time(9, 51, 28, 500000), 'end_datetime': datetime.time(9, 52, 27, 500000), 'date': datetime.datetime(2021, 12, 1, 9, 52, 27, 677138), 'style': 1, 'open': 4831.4, 'high': 4833.4, 'low': 4829.0, 'close': 4833.2, 'volume': 0}
-        '''
+        self._kline_handle_map[symbol_code].do(self.message_process(df))
 
     def OnRspSubMarketData(self, specific_instrument, rsp_info, request_id, is_last):
         """
@@ -130,7 +160,10 @@ class MarketSpi(MdApiPy):
         # print("isLast:", is_last)
         # print("pRspInfo:", rsp_info)
         # print("pSpecificInstrument:", specific_instrument)
-        pass
+        instrument_id = specific_instrument.InstrumentID
+        k = KLineHandle(instrument_id)
+        k.subscribe(self.on_bar)
+        self._kline_handle_map[instrument_id] = k
 
     def OnRspUnSubMarketData(self, pSpecificInstrument, pRspInfo, nRequestID, bIsLast):
         """
@@ -184,40 +217,36 @@ class MarketSpi(MdApiPy):
         self.save()
 
 
-def start(config_path, queue):
-    config = yaml.safe_load(open(os.path.join(config_path, "ctp_config.yaml"), encoding="utf-8"))
+def start(config_path: str, queue: Queue, sub_instrument_id: list[str]):
+    config = yaml.safe_load(open(config_path, encoding="utf-8"))
     market_servers = config["md_server"]
-    year_months = config['year_month']
-    markets = config['markets']
 
-    symbol_codes = []
-    for year_month in year_months:
-        for market in markets:
-            sc = market + year_month
-            symbol_codes.append(sc)
-
+    logger.info("start create the ctp instance.")
     market = MarketSpi(config, queue)
     market.Create()
+
     for server in market_servers:
         market.RegisterFront(server)
+        logger.info(f"ctp front address {server} registered.")
     market.Init()
-    trading_day = market.GetTradingDay()
-    logger.info(f"trading day: {trading_day}")
 
-    if market._login:
-        market.SubscribeMarketData(symbol_codes)
+    logger.info("ctp instance created.")
+    trading_day = market.GetTradingDay()
+    logger.info(f"<CTP> trading day: {trading_day}")
+
+    if market.is_login():
+        market.SubscribeMarketData(sub_instrument_id)
+        stop_time: int = int(config['stop_time']) if 'stop_time' in config else 150500
         while True:
-            if int(datetime.now().strftime('%H%M%S')) >= 150200:
-                market.UnSubscribeMarketData(symbol_codes)
+            if int(datetime.now().strftime('%H%M%S')) >= stop_time:
+                market.UnSubscribeMarketData(sub_instrument_id)
                 break
             time.sleep(1)
     else:
-        pass
+        logger.error(f"<CTP> login fail.")
 
-
-def on_kline(bar):
-    pass
+    logger.info("ctp work done.")
 
 
 if __name__ == "__main__":
-    start("config", on_kline)
+    pass

@@ -3,6 +3,61 @@ import weakref
 from collections.abc import MutableMapping
 
 
+class Price:
+
+    def __init__(self, value=0):
+        self._price = int(value * 1000)
+
+    def __lt__(self, other):
+        if isinstance(other, float):
+            other = int(other * 1000)
+        elif isinstance(other, Price):
+            other = other._price
+
+        return self._price < other
+
+    def __gt__(self, other):
+        if isinstance(other, float):
+            other = int(other * 1000)
+        elif isinstance(other, Price):
+            other = other._price
+
+        return self._price > other
+
+    def __le__(self, other):
+        if isinstance(other, float):
+            other = int(other * 1000)
+        elif isinstance(other, Price):
+            other = other._price
+
+        return self._price <= other
+
+    def __ne__(self, other):
+        if isinstance(other, float):
+            other = int(other * 1000)
+        elif isinstance(other, Price):
+            other = other._price
+
+        return self._price != other
+
+    def __ge__(self, other):
+        if isinstance(other, float):
+            other = int(other * 1000)
+        elif isinstance(other, Price):
+            other = other._price
+
+        return self._price >= other
+
+    def __add__(self, other):
+        if isinstance(other, Price):
+            other = other._price
+        elif isinstance(other, float):
+            other = int(other * 1000)
+
+        self._price += other
+        return self
+
+
 class BaseEntity(MutableMapping):
 
     def _instance_entity(self, path):

@@ -28,7 +28,7 @@ def generator_period_dt(interval: int) -> List[datetime]:
 
 
 def create_kline(symbol_code: str, open_price: float, close_price: float, high_price: float, low_price: float,
-                 volume: int, start_date: int, end_date: int, _date, style: Optional[int] = 0) -> Kline:
+                 volume: int, start_date: int, end_date: int, _date, style: Optional[int] = 0) -> KLine:
     """创建Kline对象
     Args:
         open_price: 开盘价
@@ -102,7 +102,7 @@ class KLineHandle:
         self.quotes.append(quote)
         self._quote_cache.append(quote)
 
-    def _make_kline(self) -> Kline:
+    def _make_kline(self) -> KLine:
         """创建一根k线
         Args:
             message (:py:class:`~pandas.Series`): 当前行情消息
