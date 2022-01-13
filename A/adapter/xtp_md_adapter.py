@@ -9,7 +9,7 @@ from A.data import KLineHandle
 from A.types.xtp import Snapshot
 from A.types import StrategyType
 from A.types import KLine, EventType, Event
-from A.sdk.xtp import XTP_EXCHANGE_TYPE, XTP_PROTOCOL_TYPE, XTP_LOG_LEVEL
+from A.sdk.xtp import XTP_EXCHANGE_TYPE, XTP_LOG_LEVEL
 
 from datetime import datetime
 from multiprocessing import Queue
