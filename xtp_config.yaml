@@ -1,0 +1,15 @@
+#user: "109279000210"
+#pass: "123"
+#host: "10.36.53.91"
+#port: 6666
+#client_id: 55
+## tcp: 1, udp: 2
+#socket_type: 1
+
+user: "53191002847"
+pass: "Al5xkgXo"
+software_key: "b8aa7173bba3470e390d787219b2112e"
+host: "119.3.103.38"
+port: 6002
+client_id: 57
+socket_type: 1

@@ -4,7 +4,7 @@ import time
 import yaml
 import pandas as pd
 
-from A.types import Price, EventType, Event
+from A.types import Price, EventType, Event, StrategyType
 from A.types.ctp import Snapshot
 from numpy import char as nchar
 from datetime import datetime
@@ -43,8 +43,9 @@ class MarketSpi(MdApiPy):
 
     def on_bar(self, bar):
         event = Event()
-        event.event_type = EventType.KLINE_DATA
         event.data = bar
+        event.ex_type = StrategyType.CTP
+        event.event_type = EventType.KLINE_DATA
         self._queue.put(event)
 
     @property
@@ -134,8 +135,9 @@ class MarketSpi(MdApiPy):
         tick_data.ask5_volume = depth_market_data.AskVolume5
 
         event = Event()
-        event.event_type = EventType.SNAPSHOT_DATA
         event.data = tick_data
+        event.ex_type = StrategyType.CTP
+        event.event_type = EventType.SNAPSHOT_DATA
         self._queue.put(event)
 
         df = pd.DataFrame([depth_market_data.to_dict()])

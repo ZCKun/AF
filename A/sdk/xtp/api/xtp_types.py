@@ -1,3 +1,4 @@
+
 class XTP_EXCHANGE_TYPE:
     XTP_EXCHANGE_SH = 1
     XTP_EXCHANGE_SZ = 2

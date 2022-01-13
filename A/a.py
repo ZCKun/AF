@@ -1,63 +1,88 @@
 from A.log import logger
-from A.adapter import ctp_start
-from A.types import EventType, Event, KLine, StrategyType
-from A.types.ctp import Snapshot
-from A.base.strategy import CTPStrategy
+from A.base.strategy.base import Strategy
+from A.adapter import ctp_start, xtp_start
+from A.types import EventType, Event, StrategyType
 
-from typing import Union
 from datetime import datetime
 from multiprocessing import Queue, Process
 
 
-class A:
+class AF:
 
-    def __init__(self, ctp_config_path: str):
+    def __init__(self, ctp_config_path: str,
+                 xtp_config_path: str,
+                 enable_xtp: bool = False,
+                 enable_ctp: bool = False):
         self._event_queue = Queue()
-        self._strategies: list[CTPStrategy] = list()
+        self._strategies: list[Strategy] = list()
         self._ctp_config_path = ctp_config_path
+        self._xtp_config_path = xtp_config_path
+        self._end_time = 999999
 
-    def docking(self, strategy: Union[CTPStrategy]):
-        if isinstance(strategy, CTPStrategy):
+        self._enable_xtp: bool = enable_xtp
+        self._enable_ctp: bool = enable_ctp
+
+    def docking(self, strategy: Strategy):
+        if isinstance(strategy, Strategy):
             self._strategies.append(strategy)
         else:
             raise TypeError(f"not support strategy type: [{type(strategy)}].")
 
-    def __on_bar(self, bar: KLine):
+    def __on_bar(self, event: Event):
         for s in self._strategies:
-            s.on_bar(bar)
+            if s.type() == event.ex_type:
+                s.on_bar(event.data)
 
-    def __on_snapshot(self, tick: Snapshot):
+    def __on_snapshot(self, event: Event):
         for s in self._strategies:
-            s.on_snapshot(tick)
+            if s.type() == event.ex_type:
+                s.on_snapshot(event.data)
 
-    def __get_ctp_sub_instrument_id(self) -> list[str]:
+    def __get_symbol_codes(self, _type) -> list[str]:
         instrument_id = []
 
         for s in self._strategies:
-            if s.type() == StrategyType.CTP:
-                instrument_id += s.sub_instrument_id
+            if s.type() == _type:
+                instrument_id += s.sub_symbol_code
 
         return instrument_id
 
-    def start(self):
-        logger.info("AFramework start work")
-        ctp_process = Process(target=ctp_start,
-                              args=(self._ctp_config_path,
-                                    self._event_queue,
-                                    self.__get_ctp_sub_instrument_id())
-                              )
-        ctp_process.start()
+    def _start_with_normal(self):
+        ctp_process = None
+        xtp_process = None
 
-        while int(datetime.now().strftime('%H%M%S')) < 153000:
+        if self._enable_ctp:
+            ctp_process = Process(target=ctp_start,
+                                  args=(self._ctp_config_path,
+                                        self._event_queue,
+                                        self.__get_symbol_codes(StrategyType.CTP))
+                                  )
+            ctp_process.start()
+
+        if self._enable_xtp:
+            xtp_process = Process(target=xtp_start,
+                                  args=(self._xtp_config_path,
+                                        self._event_queue,
+                                        self.__get_symbol_codes(StrategyType.XTP))
+                                  )
+            xtp_process.start()
+
+        while int(datetime.now().strftime('%H%M%S')) < self._end_time:
             event: Event = self._event_queue.get()
             if not event:
                 continue
 
             if event.event_type == EventType.SNAPSHOT_DATA:
-                self.__on_snapshot(event.data)
+                self.__on_snapshot(event)
             elif event.event_type == EventType.KLINE_DATA:
-                self.__on_bar(event.data)
+                self.__on_bar(event)
 
-        ctp_process.join()
+        if ctp_process is not None:
+            ctp_process.join()
+        if xtp_process is not None:
+            xtp_process.terminate()
 
+    def start(self):
+        logger.info("AFramework start work")
+        self._start_with_normal()
         logger.info("Framework work done.")
