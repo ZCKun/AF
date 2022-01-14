@@ -1,4 +1,5 @@
 # AFramework
+![](https://img.shields.io/badge/python-3.9%2B-green)
 
 ## Installation
 ```shell
