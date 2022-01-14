@@ -17,7 +17,7 @@ class Strategy(CTPStrategy):
 
 def main():
     a = AF(AFMode.NORMAL,
-           ctp_config_path="ctp_config.yaml",
+           ctp_config_path="config/ctp_config.yaml",
            enable_ctp=True)
 
     s = Strategy()

@@ -17,7 +17,7 @@ class Strategy(XTPStrategy):
 
 def main():
     a = AF(AFMode.NORMAL,
-           xtp_config_path="xtp_config.yaml",
+           xtp_config_path="config/xtp_config.yaml",
            enable_xtp=True)
 
     s = Strategy()
