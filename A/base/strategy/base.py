@@ -1,4 +1,7 @@
-class Strategy:
+from abc import ABC
+
+
+class Strategy(ABC):
 
     def __init__(self):
         self._type = ...

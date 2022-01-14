@@ -28,10 +28,10 @@ class Strategy2(XTPStrategy):
 
 
 def main():
-    a = AF("ctp_config.yaml",
-           "xtp_config.yaml",
-           "csv_config.yaml",
-           run_mode=AFMode.NORMAL,
+    a = AF(AFMode.NORMAL,
+           ctp_config_path="ctp_config.yaml",
+           xtp_config_path="xtp_config.yaml",
+           csv_config_path="csv_config.yaml",
            enable_ctp=True)
 
     cs = Strategy()

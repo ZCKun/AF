@@ -1,3 +1,5 @@
+import os.path
+
 from A.log import logger
 from A.base.strategy.base import Strategy
 from A.adapter import ctp_start, xtp_start, csv_start
@@ -5,6 +7,7 @@ from A.types import EventType, Event, StrategyType
 
 from enum import Enum
 from datetime import datetime
+from typing import Optional
 from multiprocessing import Queue, Process
 
 
@@ -16,13 +19,24 @@ class Mode(Enum):
 class AF:
 
     def __init__(self,
-                 ctp_config_path: str,
-                 xtp_config_path: str,
-                 csv_config_path: str,
                  run_mode: Mode,
+                 ctp_config_path: Optional[str] = "",
+                 xtp_config_path: Optional[str] = "",
+                 csv_config_path: Optional[str] = "",
                  enable_xtp: bool = False,
                  enable_ctp: bool = False
                  ):
+        if run_mode == Mode.NORMAL:
+            if enable_xtp and not os.path.exists(xtp_config_path):
+                raise FileNotFoundError("xtp config path not exists.")
+            if enable_ctp and not os.path.exists(ctp_config_path):
+                raise FileNotFoundError("ctp config path not exists.")
+        elif run_mode == Mode.BACKTESTING:
+            if not os.path.exists(csv_config_path):
+                raise FileNotFoundError("csv config path not exists.")
+        else:
+            raise TypeError("unknown run mode.")
+
         self._event_queue = Queue()
         self._strategies: list[Strategy] = list()
         self._ctp_config_path = ctp_config_path
@@ -36,22 +50,42 @@ class AF:
         self._enable_ctp: bool = enable_ctp
 
     def docking(self, strategy: Strategy):
+        """ 接入策略
+
+        :param strategy: 策略对象
+        :return:
+        """
         if isinstance(strategy, Strategy):
             self._strategies.append(strategy)
         else:
-            raise TypeError(f"not support strategy type: [{type(strategy)}].")
+            raise TypeError(f"not support strategy type of [{type(strategy)}].")
 
     def _on_bar(self, event: Event):
+        """ KLine event callback function
+
+        :param event: the event message
+        :return:
+        """
         for s in self._strategies:
             if s.type() == event.ex_type:
                 s.on_bar(event.data)
 
     def _on_snapshot(self, event: Event):
+        """ Snapshot event callback function
+
+        :param event: the event message
+        :return:
+        """
         for s in self._strategies:
             if s.type() == event.ex_type:
                 s.on_snapshot(event.data)
 
     def _get_symbol_codes(self, _type) -> list[str]:
+        """ get the symbol code from strategies
+
+        :param _type:
+        :return: symbol code list
+        """
         instrument_id = []
 
         for s in self._strategies:
@@ -61,6 +95,11 @@ class AF:
         return instrument_id
 
     def _on_event(self, event: Event):
+        """ on event callback function
+
+        :param event: the event message
+        :return:
+        """
         if event.event_type == EventType.SNAPSHOT_DATA:
             self._on_snapshot(event)
         elif event.event_type == EventType.KLINE_DATA:

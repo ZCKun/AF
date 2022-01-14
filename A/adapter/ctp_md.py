@@ -181,7 +181,7 @@ class MarketSpi(MdApiPy):
         # print("isLast:", bIsLast)
         # print("pRspInfo:", pRspInfo)
         # print("pSpecificInstrument:", pSpecificInstrument)
-        self.save()
+        pass
 
     def message_process(self, df):
         data_df = df.rename(columns={
@@ -201,7 +201,6 @@ class MarketSpi(MdApiPy):
         return data_df
 
     def save(self):
-        return
         if not os.path.exists(TODAY_DT_STR):
             os.mkdir(TODAY_DT_STR)
 
@@ -220,12 +219,19 @@ class MarketSpi(MdApiPy):
 
 
 def start(config_path: str, queue: Queue, sub_instrument_id: list[str]):
+    """ 创建并启动 CTP 实例
+
+    :param config_path: ctp 配置路径
+    :param queue: 事件驱动消息队列
+    :param sub_instrument_id: 需要订阅的合约代码
+    :return:
+    """
     config = yaml.safe_load(open(config_path, encoding="utf-8"))
     market_servers = config["md_server"]
 
     logger.info("start create the ctp instance.")
     market = MarketSpi(config, queue)
-    market.Create("cache")
+    market.Create("./cache")
 
     for server in market_servers:
         market.RegisterFront(server)
@@ -247,6 +253,7 @@ def start(config_path: str, queue: Queue, sub_instrument_id: list[str]):
     else:
         logger.error(f"<CTP> login fail.")
 
+    market.save()
     logger.info("ctp work done.")
 
 

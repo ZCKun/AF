@@ -10,17 +10,17 @@ class CTPStrategy(Strategy):
         self._type = StrategyType.CTP
 
     def on_bar(self, bar: KLine):
-        """ KLine 行情
+        """ KLine 数据回调
 
-        :param bar: kline data
+        :param bar: the kline data
         :return:
         """
         raise NotImplementedError
 
     def on_snapshot(self, tick: Snapshot):
-        """ 快照行情
+        """ 行情快照数据回调
 
-        :param tick: snapshot data
+        :param tick: the snapshot data
         :return:
         """
         raise NotImplementedError
