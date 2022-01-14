@@ -91,7 +91,6 @@ class Md(QuoteApi):
         df['date'] = self.trading_day
         df = df.rename(columns={
             "ticker": "symbol_code",
-            "last_price": "latest_price",
         })
         df.loc[:, 'last_modified_full'] = pd.to_datetime(df['data_time'], format="%Y%m%d%H%M%S%f").dt.time
 

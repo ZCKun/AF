@@ -19,6 +19,24 @@ TODAY_DT = datetime.today()
 TODAY_DT_STR = TODAY_DT.strftime('%Y%m%d')
 
 
+def message_process(df: pd.DataFrame):
+    data_df = df.rename(columns={
+        'InstrumentID': 'symbol_code',
+        'TradingDay': 'date',
+        'LastPrice': 'last_price',
+        'UpdateMillisec': 'last_modified_mil',
+        'UpdateTime': 'last_modified'
+    })
+    last_modified_arr = data_df.last_modified.to_numpy(dtype=str)
+    last_modified_mil_arr = data_df.last_modified_mil.to_numpy(dtype=str)
+    last_modified_full_arr = nchar.add(nchar.add(last_modified_arr, '.'), last_modified_mil_arr)
+
+    data_df.loc[:, 'last_modified_full'] = pd.to_datetime(last_modified_full_arr, format='%H:%M:%S.%f').time
+    data_df.loc[:, 'last_modified'] = pd.to_datetime(last_modified_arr, format='%H:%M:%S').time
+
+    return data_df
+
+
 class MarketSpi(MdApiPy):
 
     def __init__(self, config: dict, queue: Queue, *args, **kwargs):
@@ -146,7 +164,7 @@ class MarketSpi(MdApiPy):
         else:
             self._source_cache[symbol_code] = [df]
 
-        self._kline_handle_map[symbol_code].do(self.message_process(df))
+        self._kline_handle_map[symbol_code].do(message_process(df))
 
     def OnRspSubMarketData(self, specific_instrument, rsp_info, request_id, is_last):
         """
@@ -182,23 +200,6 @@ class MarketSpi(MdApiPy):
         # print("pRspInfo:", pRspInfo)
         # print("pSpecificInstrument:", pSpecificInstrument)
         pass
-
-    def message_process(self, df):
-        data_df = df.rename(columns={
-            'InstrumentID': 'symbol_code',
-            'TradingDay': 'date',
-            'LastPrice': 'latest_price',
-            'UpdateMillisec': 'last_modified_mil',
-            'UpdateTime': 'last_modified'
-        })
-        last_modified_arr = data_df.last_modified.to_numpy(dtype=str)
-        last_modified_mil_arr = data_df.last_modified_mil.to_numpy(dtype=str)
-        last_modified_full_arr = nchar.add(nchar.add(last_modified_arr, '.'), last_modified_mil_arr)
-
-        data_df.loc[:, 'last_modified_full'] = pd.to_datetime(last_modified_full_arr, format='%H:%M:%S.%f').time
-        data_df.loc[:, 'last_modified'] = pd.to_datetime(last_modified_arr, format='%H:%M:%S').time
-
-        return data_df
 
     def save(self):
         if not os.path.exists(TODAY_DT_STR):

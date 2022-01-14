@@ -1,40 +1,25 @@
-from A import AF, XTPStrategy, CTPStrategy, logger, AFMode
-from A.types import KLine
-from A.types.ctp import Snapshot
+import sys
+sys.path.append("..")
+from A import AF, AFMode, Strategy, logger, StrategyType
 
 
-class Strategy(CTPStrategy):
+class Backtesting(Strategy):
     def __init__(self):
         super().__init__()
-        self.sub_symbol_code = ['IF2201', 'IH2201']
+        self._type = StrategyType.CSV
+        self.sub_symbol_code = ['IF9999']
 
-    def on_bar(self, bar: KLine):
-        logger.debug(bar)
+    def on_bar(self, bar):
+        logger.info(bar)
 
-    def on_snapshot(self, tick: Snapshot):
-        logger.debug(tick)
-
-
-class Strategy2(XTPStrategy):
-    def __init__(self):
-        super().__init__()
-        self.sub_symbol_code = ['000001.SZ', '000016.SH', '399905.SZ', '399300.SZ']
-
-    def on_bar(self, bar: KLine):
-        logger.debug(bar)
-
-    def on_snapshot(self, tick: Snapshot):
-        logger.debug(tick)
+    def on_snapshot(self, tick):
+        logger.info(tick)
 
 
 def main():
     a = AF(AFMode.BACKTESTING, csv_config_path="config/csv_config.yaml")
-
-    cs = Strategy()
-    xs = Strategy2()
-
-    a.docking(cs)
-    a.docking(xs)
+    s = Backtesting()
+    a.docking(s)
     a.start()
 
 

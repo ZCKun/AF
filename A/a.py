@@ -137,12 +137,21 @@ class AF:
             xtp_process.terminate()
 
     def _start_with_backtesting(self):
+        # csv_start(self._csv_config_path, self._event_queue, self._get_symbol_codes(StrategyType.CSV))
+
         process = Process(target=csv_start,
                           args=(self._csv_config_path,
                                 self._event_queue,
                                 self._get_symbol_codes(StrategyType.CSV))
                           )
         process.start()
+        
+        while int(datetime.now().strftime('%H%M%S')) < self._end_time:
+            event: Event = self._event_queue.get()
+            if not event:
+                continue
+            self._on_event(event)
+        
         process.join()
 
     def start(self):

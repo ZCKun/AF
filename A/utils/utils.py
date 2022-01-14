@@ -309,7 +309,7 @@ def get_data_from_file(file_path: str) -> pd.DataFrame:
         source_df = source_df.drop([0])
 
     data_df = source_df.loc[:, ("最新价", "数量", "最后修改时间")]
-    data_df.columns = ['latest_price', 'volume', 'last_modified']
+    data_df.columns = ['last_price', 'volume', 'last_modified']
 
     last_modified = data_df.last_modified.to_numpy(dtype=str)
     last_modified_ms = source_df['最后修改毫秒'].to_numpy(dtype=str)
@@ -321,7 +321,7 @@ def get_data_from_file(file_path: str) -> pd.DataFrame:
     data_df.loc[:, 'last_modified_full'] = pd.to_datetime(last_modified_full)
 
     data_df.loc[:, 'date'] = source_df['交易日']
-    data_df.loc[:, 'latest_price'] = data_df.latest_price.astype(float)
+    data_df.loc[:, 'last_price'] = data_df.last_price.astype(float)
 
     return data_df
 

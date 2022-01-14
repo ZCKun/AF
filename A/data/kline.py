@@ -6,8 +6,11 @@ from datetime import timedelta, datetime
 from A.types.kline import KLine
 
 
-def generator_period_dt(interval: int) -> List[datetime]:
-    start = datetime.now()
+def generator_period_dt(interval: int, replace_date: Optional[datetime] = None) -> List[datetime]:
+    start = datetime.now().replace(second=0, microsecond=0)
+    if replace_date is not None:
+        start.replace(year=replace_date.year, month=replace_date.month, day=replace_date.day)
+
     i = int(start.strftime('%H%M%S'))
     weekday = datetime.weekday(datetime.today())
     if weekday in [5, 6] or not 93000 < i < 150000:
@@ -30,7 +33,9 @@ def generator_period_dt(interval: int) -> List[datetime]:
 def create_kline(symbol_code: str, open_price: float, close_price: float, high_price: float, low_price: float,
                  volume: int, start_date: int, end_date: int, _date, style: Optional[int] = 0) -> KLine:
     """创建Kline对象
+
     Args:
+        symbol_code: 标的代码
         open_price: 开盘价
         close_price: 收盘价
         high_price: 最高价
@@ -42,7 +47,6 @@ def create_kline(symbol_code: str, open_price: float, close_price: float, high_p
         style: Kline样式; 0: 收盘价等于开盘价, 1: 阳线, -1: 阴线
     Returns: K线对象
     """
-
     obj = KLine()
     obj.datetime = _date
     obj.symbol_code = symbol_code
@@ -62,9 +66,10 @@ def create_kline(symbol_code: str, open_price: float, close_price: float, high_p
 
 class KLineHandle:
 
-    def __init__(self, symbol_code: str):
+    def __init__(self, symbol_code: str, interval: int = 60, t0_date: Optional[datetime] = None):
         self._symbol_code = symbol_code
-        self._interval = 60
+        self._t0_date: datetime = t0_date
+        self._interval = interval
 
         self._quote_cache = []
         self._callbacks = []
@@ -73,7 +78,7 @@ class KLineHandle:
         self.quotes = []
         self.kline_lst = []
 
-        self._period = generator_period_dt(self._interval)
+        self._period = generator_period_dt(self._interval, self._t0_date)
 
     def subscribe(self, callback):
         self._callbacks.append(callback)
@@ -103,21 +108,17 @@ class KLineHandle:
         self._quote_cache.append(quote)
 
     def _make_kline(self) -> KLine:
-        """创建一根k线
-        Args:
-            message (:py:class:`~pandas.Series`): 当前行情消息
-        Returns:
-        """
+        """ 创建一根k线 """
         quote_cache_df = pd.concat(self._quote_cache)
 
-        latest_price_series: Series = quote_cache_df.latest_price.astype(float)
+        last_price_series: Series = quote_cache_df.last_price.astype(float)
         last_modified_full = quote_cache_df.last_modified_full
 
-        open_price = latest_price_series.iloc[0]
-        close_price = latest_price_series.iloc[-2]
+        open_price = last_price_series.iloc[0]
+        close_price = last_price_series.iloc[-2]
 
-        high_price = latest_price_series.max()
-        low_price = latest_price_series.min()
+        high_price = last_price_series.max()
+        low_price = last_price_series.min()
 
         start_date = last_modified_full.iloc[0]
         end_date = last_modified_full.iloc[-2]
@@ -150,9 +151,9 @@ class KLineHandle:
     def bars(self):
         return self.kline_lst
 
-    def do(self, message):
+    def do(self, message: pd.Series):
         if len(self._period) <= 0:
-            self._period = generator_period_dt(self._interval)
+            self._period = generator_period_dt(self._interval, self._t0_date)
 
         self._save_quote(message)
 
