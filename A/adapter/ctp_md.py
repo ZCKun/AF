@@ -225,7 +225,7 @@ def start(config_path: str, queue: Queue, sub_instrument_id: list[str]):
 
     logger.info("start create the ctp instance.")
     market = MarketSpi(config, queue)
-    market.Create()
+    market.Create("cache")
 
     for server in market_servers:
         market.RegisterFront(server)

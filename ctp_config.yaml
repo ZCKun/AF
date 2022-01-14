@@ -1,13 +1,23 @@
-investor_id: "20801820"
-password: "589127"
-broker_id: "7080"
-instrument_id: "IH2201"
+#investor_id: "20801820"
+#password: "589127"
+#broker_id: "7080"
+#md_server:
+#  - "tcp://10.40.8.12:51213"
+#  - "tcp://10.40.8.13:51213"
+#user_product_info: "LiangHua_MagicQuant_4.8.8"
+#auth_code: "TU2RV8WVXIQ7MN3J"
+#app_id: "simnow_client_test"
+
+investor_id: "172444"
+password: "zxc147258"
+broker_id: "9999"
 md_server:
-  - "tcp://10.40.8.12:51213"
-  - "tcp://10.40.8.13:51213"
-user_product_info: "LiangHua_MagicQuant_4.8.8"
-auth_code: "TU2RV8WVXIQ7MN3J"
+  - "tcp://180.168.146.187:10211"
+user_product_info: "MagicQuant"
+auth_code: "0000000000000000"
 app_id: "simnow_client_test"
+
+instrument_id: "IH2201"
 year_month:
   - "2201"
 markets:

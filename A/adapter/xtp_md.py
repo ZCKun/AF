@@ -99,6 +99,7 @@ class Md(QuoteApi):
         if symbol_code not in self._kline_handle_map:
             k = KLineHandle(symbol_code)
             k.subscribe(self.on_bar)
+            self._kline_handle_map[symbol_code] = k
         else:
             k = self._kline_handle_map[symbol_code]
         k.do(df)
@@ -154,12 +155,11 @@ def start(config_path: str, queue: Queue, sub_symbol_codes: list[str]):
     else:
         sh_codes = []
         sz_codes = []
-        sz_labels = ['30', '00', '12']
         for s in sub_symbol_codes:
-            if s[:2] in sz_labels:
-                sz_codes.append({'ticker': s})
+            if s[-2:].upper() == 'SZ':
+                sz_codes.append({'ticker': s[:-3]})
             else:
-                sh_codes.append({'ticker': s})
+                sh_codes.append({'ticker': s[:-3]})
 
         if (count := len(sz_codes)) > 0:
             s = md.subscribe_market_data(sz_codes, count, XTP_EXCHANGE_TYPE.XTP_EXCHANGE_SZ)

@@ -90,7 +90,7 @@ class AF:
             event: Event = self._event_queue.get()
             if not event:
                 continue
-            self._on_bar(event)
+            self._on_event(event)
 
         if ctp_process is not None:
             ctp_process.join()

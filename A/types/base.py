@@ -6,7 +6,10 @@ from collections.abc import MutableMapping
 class Price:
 
     def __init__(self, value=0):
-        self._price = int(value * 1000)
+        try:
+            self._price = int(value * 1000)
+        except OverflowError as e:
+            self._price = 0
 
     def __lt__(self, other):
         if isinstance(other, float):
@@ -56,6 +59,9 @@ class Price:
 
         self._price += other
         return self
+
+    def __repr__(self):
+        return str(self._price / 1000)
 
 
 class BaseEntity(MutableMapping):
