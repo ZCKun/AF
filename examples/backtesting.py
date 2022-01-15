@@ -1,5 +1,6 @@
 import sys
-sys.path.append("..")
+import pathlib
+sys.path.append(str(pathlib.Path.cwd()))
 from A import AF, AFMode, Strategy, logger, StrategyType
 
 
@@ -19,7 +20,7 @@ class Backtesting(Strategy):
 def main():
     a = AF(AFMode.BACKTESTING, csv_config_path="config/csv_config.yaml")
     s = Backtesting()
-    a.docking(s)
+    a.add_strategy(s)
     a.start()
 
 

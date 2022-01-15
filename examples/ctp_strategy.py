@@ -21,7 +21,7 @@ def main():
            enable_ctp=True)
 
     s = Strategy()
-    a.docking(s)
+    a.add_strategy(s)
     a.start()
 
 

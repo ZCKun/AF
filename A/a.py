@@ -20,12 +20,28 @@ class AF:
 
     def __init__(self,
                  run_mode: Mode,
+                 enable_xtp: bool = False,
+                 enable_ctp: bool = False,
+                 end_time: Optional[int] = 150000,
                  ctp_config_path: Optional[str] = "",
                  xtp_config_path: Optional[str] = "",
-                 csv_config_path: Optional[str] = "",
-                 enable_xtp: bool = False,
-                 enable_ctp: bool = False
+                 csv_config_path: Optional[str] = ""
                  ):
+        """
+
+        Args:
+            run_mode(:obj:`A.AFMode`): the AF running mode
+            enable_xtp(bool): the xtp mode switch
+            enable_ctp(bool): the ctp mode switch
+            end_time(int, optional): the AF stop time
+            ctp_config_path(str, optional): the ctp quote/trade config file path on :obj:`A.AFMode.NORMAL` run mode
+            xtp_config_path(str, optional): the xtp quote/trade config file path on :obj:`A.AFMode.NORMAL` run mode
+            csv_config_path(str, optional): the backtesting csv config file path on :obj:`A.AFMode.BACKTESTING` run mode
+
+        Raises:
+            FileNotFoundError: some config file path not found/exists.
+            TypeError: unknown run mode.
+        """
         if run_mode == Mode.NORMAL:
             if enable_xtp and not os.path.exists(xtp_config_path):
                 raise FileNotFoundError("xtp config path not exists.")
@@ -43,17 +59,24 @@ class AF:
         self._xtp_config_path = xtp_config_path
         self._csv_config_path = csv_config_path
 
-        self._end_time = 999999
+        self._end_time = end_time
         self._run_mode = run_mode
 
         self._enable_xtp: bool = enable_xtp
         self._enable_ctp: bool = enable_ctp
 
-    def docking(self, strategy: Strategy):
-        """ 接入策略
+    def add_strategy(self, strategy: Strategy):
+        """
+        append trade strategy
 
-        :param strategy: 策略对象
-        :return:
+        Args:
+            strategy: the `Strategy` instance
+
+        Returns:
+            None
+
+        Raises:
+            TypeError: unknown strategy type
         """
         if isinstance(strategy, Strategy):
             self._strategies.append(strategy)
@@ -61,30 +84,42 @@ class AF:
             raise TypeError(f"not support strategy type of [{type(strategy)}].")
 
     def _on_bar(self, event: Event):
-        """ KLine event callback function
+        """
+        KLine event callback function
 
-        :param event: the event message
-        :return:
+        Args:
+            event: the event message
+
+        Returns:
+            None
         """
         for s in self._strategies:
             if s.type() == event.ex_type:
                 s.on_bar(event.data)
 
     def _on_snapshot(self, event: Event):
-        """ Snapshot event callback function
+        """
+        Snapshot event callback function
 
-        :param event: the event message
-        :return:
+        Args:
+            event: the event message
+
+        Returns:
+            None
         """
         for s in self._strategies:
             if s.type() == event.ex_type:
                 s.on_snapshot(event.data)
 
     def _get_symbol_codes(self, _type) -> list[str]:
-        """ get the symbol code from strategies
+        """
+        get the symbol code from strategies
 
-        :param _type:
-        :return: symbol code list
+        Args:
+            _type:
+
+        Returns:
+            list[str]: the symbol code list
         """
         instrument_id = []
 
@@ -95,10 +130,14 @@ class AF:
         return instrument_id
 
     def _on_event(self, event: Event):
-        """ on event callback function
+        """
+        on event callback function
 
-        :param event: the event message
-        :return:
+        Args:
+            event: the event message
+
+        Returns:
+            None
         """
         if event.event_type == EventType.SNAPSHOT_DATA:
             self._on_snapshot(event)
