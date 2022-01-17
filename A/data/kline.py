@@ -6,8 +6,14 @@ from datetime import timedelta, datetime
 from A.types.kline import KLine
 
 
-def generator_period_dt(interval: int, replace_date: Optional[datetime] = None) -> List[datetime]:
-    start = datetime.now().replace(second=0, microsecond=0)
+def generator_period_dt(interval: int,
+                        start_dt: datetime = None,
+                        replace_date: Optional[datetime] = None) -> List[datetime]:
+    if start_dt is None:
+        start = datetime.strptime("93000", "%H%M%S")
+    else:
+        start = start_dt
+
     if replace_date is not None:
         start.replace(year=replace_date.year, month=replace_date.month, day=replace_date.day)
 

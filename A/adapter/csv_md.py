@@ -1,4 +1,3 @@
-import logging
 import os
 import yaml
 import pandas as pd
@@ -57,7 +56,13 @@ class CsvMd:
             bar = KLine()
             bar.symbol_code = row.symbol_code
             bar.time = row.time
-            bar.datetime = datetime.fromtimestamp(row.datetime.timestamp())
+            dt = row.datetime
+            bar.datetime = datetime(year=dt.year,
+                                    month=dt.month,
+                                    day=dt.day,
+                                    hour=dt.hour,
+                                    minute=dt.minute,
+                                    second=dt.second)
             bar.open = row.open
             bar.high = row.high
             bar.low = row.low
