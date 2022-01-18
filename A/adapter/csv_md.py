@@ -12,7 +12,12 @@ from multiprocessing import Queue
 
 
 class CsvMd:
-    def __init__(self, symbols: list[str], source_path: str, queue: Queue):
+    def __init__(
+            self,
+            symbols: list[str],
+            source_path: str,
+            queue: Queue
+    ) -> None:
         if os.path.isdir(source_path):
             self._source_files = glob(os.path.join(source_path, "*.csv"))
             # sort by filename
@@ -25,7 +30,10 @@ class CsvMd:
         self._symbols: list[str] = symbols
         self._kline_handle_map: dict[str, KLineHandle] = dict()
 
-    def _on_bar(self, bar: KLine):
+    def _on_bar(
+            self,
+            bar: KLine
+    ) -> None:
         logger.debug(bar)
         event = Event()
         event.data = bar
@@ -33,7 +41,10 @@ class CsvMd:
         event.event_type = EventType.KLINE_DATA
         self._queue.put(event)
 
-    def _data_pre_process(self, df: pd.DataFrame):
+    def _data_pre_process(
+            self,
+            df: pd.DataFrame
+    ) -> None:
         date_time = pd.to_datetime(df.date + ' ' + df.time, format="%Y/%m/%d %H:%M:%S")
         df.loc[:, 'time'] = date_time.dt.time
         df.loc[:, 'date'] = date_time.dt.date
@@ -43,10 +54,16 @@ class CsvMd:
         })
         return df
 
-    def _kline_msg_process(self, msg: pd.Series):
+    def _kline_msg_process(
+            self,
+            msg: pd.Series
+    ) -> None:
         pass
 
-    def _parser(self, df: pd.DataFrame):
+    def _parser(
+            self,
+            df: pd.DataFrame
+    ) -> None:
         logger.debug("_parser")
         for _, row in df.iterrows():
             symbol_code = row.symbol_code
@@ -84,7 +101,10 @@ class CsvMd:
             #     k = self._kline_handle_map[symbol_code]
             # k.do(row)
 
-    def _data_check(self, df: pd.DataFrame) -> True:
+    def _data_check(
+            self,
+            df: pd.DataFrame
+    ) -> True:
         if 'symbol' not in df:
             logger.error("not found 'symbol' field.")
             return False

@@ -1,3 +1,5 @@
+import sys
+sys.path.append("..")
 from A.types import KLine
 from A.types.ctp import Snapshot
 from A import AF, XTPStrategy, logger, AFMode

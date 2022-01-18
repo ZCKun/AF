@@ -1,5 +1,3 @@
-import sys
-
 from . import py_xtp_quote
 from .xtp_types import XTP_EXCHANGE_TYPE, XTP_PROTOCOL_TYPE, XTP_LOG_LEVEL
 
@@ -9,7 +7,10 @@ class QuoteApi(py_xtp_quote.QuoteApi):
     def __init__(self):
         super().__init__()
 
-    def on_errr(self, error_info: dict):
+    def on_errr(
+            self,
+            error_info: dict
+    ) -> None:
         """
         错误应答
 
@@ -17,7 +18,10 @@ class QuoteApi(py_xtp_quote.QuoteApi):
         """
         print(error_info)
 
-    def on_disconnected(self, reason: int):
+    def on_disconnected(
+            self,
+            reason: int
+    ) -> None:
         """
         当客户端与行情后台通信连接断开时,该方法被调用
 
@@ -25,7 +29,15 @@ class QuoteApi(py_xtp_quote.QuoteApi):
         """
         raise NotImplementedError
 
-    def login(self, ip: str, port: int, user: str, passwd: str, sock_type: XTP_PROTOCOL_TYPE, local_ip: str) -> int:
+    def login(
+            self,
+            ip: str,
+            port: int,
+            user: str,
+            passwd: str,
+            sock_type: XTP_PROTOCOL_TYPE,
+            local_ip: str
+    ) -> int:
         """
         用户登录请求
         *此函数为同步阻塞式,不需要异步等待登录成功,当函数返回即可进行后续操作,此api只能有一个连接
@@ -40,7 +52,12 @@ class QuoteApi(py_xtp_quote.QuoteApi):
         """
         return super().login(ip, port, user, passwd, sock_type, local_ip)
 
-    def create_quote_api(self, client_id: int, log_path: str, log_level: XTP_LOG_LEVEL):
+    def create_quote_api(
+            self,
+            client_id: int,
+            log_path: str,
+            log_level: XTP_LOG_LEVEL
+    ) -> None:
         """
         创建QuoteApi,返回创建出的UserApi
 
@@ -54,7 +71,10 @@ class QuoteApi(py_xtp_quote.QuoteApi):
         """ 获取API的系统错误,可以在Login、Logout、订阅、取消订阅失败时调用,获取失败的原因 """
         return super().get_api_last_error()
 
-    def query_all_tickers_full_info(self, exchange_id: XTP_EXCHANGE_TYPE) -> int:
+    def query_all_tickers_full_info(
+            self,
+            exchange_id: XTP_EXCHANGE_TYPE
+    ) -> int:
         """
         获取所有合约的详细静态信息,包括指数等非可交易的
 
@@ -63,7 +83,12 @@ class QuoteApi(py_xtp_quote.QuoteApi):
         """
         return super().query_all_tickers_full_info(exchange_id)
 
-    def subscribe_market_data(self, ticker: list, count: int, exchange_id: XTP_EXCHANGE_TYPE) -> int:
+    def subscribe_market_data(
+            self,
+            ticker: list,
+            count: int,
+            exchange_id: XTP_EXCHANGE_TYPE
+    ) -> int:
         """
         订阅行情,包括股票、指数和期权
 
@@ -74,7 +99,10 @@ class QuoteApi(py_xtp_quote.QuoteApi):
         """
         return super().subscribe_market_data(ticker, count, exchange_id)
 
-    def subscribe_all_market_data(self, exchange_id: XTP_EXCHANGE_TYPE = XTP_EXCHANGE_TYPE.XTP_EXCHANGE_UNKNOWN) -> int:
+    def subscribe_all_market_data(
+            self,
+            exchange_id: XTP_EXCHANGE_TYPE = XTP_EXCHANGE_TYPE.XTP_EXCHANGE_UNKNOWN
+    ) -> int:
         """
         订阅全市场的股票行情
         *需要与全市场退订行情接口配套使用
@@ -84,7 +112,12 @@ class QuoteApi(py_xtp_quote.QuoteApi):
         """
         return super().subscribe_all_market_data(exchange_id)
 
-    def query_tickers_price_info(self, ticker: list, count: int, exchange_id: XTP_EXCHANGE_TYPE) -> int:
+    def query_tickers_price_info(
+            self,
+            ticker: list,
+            count: int,
+            exchange_id: XTP_EXCHANGE_TYPE
+    ) -> int:
         """
         获取合约的最新价格信息
 
@@ -99,7 +132,12 @@ class QuoteApi(py_xtp_quote.QuoteApi):
         """ 获取所有合约的最新价格信息,“0”表示发送查询请求成功,非“0”表示发送查询请求不成功 """
         return super().query_all_tickers_price_info()
 
-    def on_query_all_tickers_full_info(self, ticker_info: dict, error_info: dict, is_last: bool):
+    def on_query_all_tickers_full_info(
+            self,
+            ticker_info: dict,
+            error_info: dict,
+            is_last: bool
+    ) -> None:
         """
         查询合约完整静态信息的应答
 
@@ -109,7 +147,12 @@ class QuoteApi(py_xtp_quote.QuoteApi):
         """
         raise NotImplementedError
 
-    def on_query_all_tickers(self, ticker_info: dict, error_info: dict, is_last: bool):
+    def on_query_all_tickers(
+            self,
+            ticker_info: dict,
+            error_info: dict,
+            is_last: bool
+    ) -> None:
         """
         查询合约部分静态信息的应答
 
@@ -119,7 +162,12 @@ class QuoteApi(py_xtp_quote.QuoteApi):
         """
         raise NotImplementedError
 
-    def on_query_tickers_price_info(self, ticker_info: dict, error_info: dict, is_last: bool):
+    def on_query_tickers_price_info(
+            self,
+            ticker_info: dict,
+            error_info: dict,
+            is_last: bool
+    ) -> None:
         """
         查询合约的最新价格信息应答
 
@@ -129,14 +177,26 @@ class QuoteApi(py_xtp_quote.QuoteApi):
         """
         raise NotImplementedError
 
-    def on_depth_market_data(self, market_data: dict, bid1_qty: list, bid1_count: int, max_bid1_count: int, 
-            ask1_qty: list, ask1_count: int, max_ask1_count: int):
+    def on_depth_market_data(
+            self,
+            market_data: dict,
+            bid1_qty: list,
+            bid1_count: int,
+            max_bid1_count: int,
+            ask1_qty: list,
+            ask1_count: int,
+            max_ask1_count: int
+    ) -> None:
         """
         深度行情通知,包含买一卖一队列
         """
         raise NotImplementedError
 
-    def on_subscribe_all_market_data(self, exchange_id: int, error: dict):
+    def on_subscribe_all_market_data(
+            self,
+            exchange_id: int,
+            error: dict
+    ) -> None:
         """
         订阅全市场的股票行情应答
 
@@ -145,7 +205,12 @@ class QuoteApi(py_xtp_quote.QuoteApi):
         """
         raise NotImplementedError
 
-    def on_sub_market_data(self, ticker: dict, error_info: dict, is_last: bool):
+    def on_sub_market_data(
+            self,
+            ticker: dict,
+            error_info: dict,
+            is_last: bool
+    ) -> None:
         """
         订阅行情应答,包括股票、指数和期权
         *每条订阅的合约均对应一条订阅应答,需要快速返回,否则会堵塞后续消息,当堵塞严重时,会触发断线
@@ -155,4 +220,3 @@ class QuoteApi(py_xtp_quote.QuoteApi):
         :param is_last: 是否此次订阅的最后一个应答,当为最后一个的时候为true,如果为false,表示还有其他后续消息响应
         """
         raise NotImplementedError
-

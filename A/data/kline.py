@@ -72,7 +72,12 @@ def create_kline(symbol_code: str, open_price: float, close_price: float, high_p
 
 class KLineHandle:
 
-    def __init__(self, symbol_code: str, interval: int = 60, t0_date: Optional[datetime] = None):
+    def __init__(
+            self,
+            symbol_code: str,
+            interval: int = 60,
+            t0_date: Optional[datetime] = None
+    ):
         self._symbol_code = symbol_code
         self._t0_date: datetime = t0_date
         self._interval = interval

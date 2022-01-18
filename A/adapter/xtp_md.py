@@ -17,21 +17,30 @@ from multiprocessing import Queue
 
 class Md(QuoteApi):
 
-    def __init__(self, queue: Queue):
+    def __init__(
+            self,
+            queue: Queue
+    ) -> None:
         super().__init__()
         self.trading_day = '-'
         self.data = {}
         self._queue = queue
         self._kline_handle_map: dict[str, KLineHandle] = {}
 
-    def on_bar(self, bar: KLine):
+    def on_bar(
+            self,
+            bar: KLine
+    ) -> None:
         event = Event()
         event.data = bar
         event.ex_type = StrategyType.XTP
         event.event_type = EventType.KLINE_DATA
         self._queue.put(event)
 
-    def on_disconnected(self, reason: int):
+    def on_disconnected(
+            self,
+            reason: int
+    ) -> None:
         """
         当客户端与行情后台通信连接断开时,该方法被调用
         :param reason: 错误原因,请与错误代码表对应
@@ -39,7 +48,12 @@ class Md(QuoteApi):
         logger.error("<XTP> [on_disconnected] quote disconnected, reason:{reason}")
         sys.exit(1)
 
-    def on_query_all_tickers_full_info(self, ticker_info: dict, error_info: dict, is_last: bool):
+    def on_query_all_tickers_full_info(
+            self,
+            ticker_info: dict,
+            error_info: dict,
+            is_last: bool
+    ) -> None:
         """
         查询合约完整静态信息的应答
 
@@ -49,7 +63,12 @@ class Md(QuoteApi):
         """
         pass
 
-    def on_query_all_tickers(self, ticker_info: dict, error_info: dict, is_last: bool):
+    def on_query_all_tickers(
+            self,
+            ticker_info: dict,
+            error_info: dict,
+            is_last: bool
+    ) -> None:
         """
         查询合约部分静态信息的应答
 
@@ -59,7 +78,12 @@ class Md(QuoteApi):
         """
         pass
 
-    def on_query_tickers_price_info(self, ticker_info: dict, error_info: dict, is_last: bool):
+    def on_query_tickers_price_info(
+            self,
+            ticker_info: dict,
+            error_info: dict,
+            is_last: bool
+    ) -> None:
         """
         查询合约的最新价格信息应答
 
@@ -69,8 +93,16 @@ class Md(QuoteApi):
         """
         pass
 
-    def on_depth_market_data(self, market_data: dict, bid1_qty: list, bid1_count: int, max_bid1_count: int,
-                             ask1_qty: list, ask1_count: int, max_ask1_count: int):
+    def on_depth_market_data(
+            self,
+            market_data: dict,
+            bid1_qty: list,
+            bid1_count: int,
+            max_bid1_count: int,
+            ask1_qty: list,
+            ask1_count: int,
+            max_ask1_count: int
+    ) -> None:
         """
         深度行情通知,包含买一卖一队列
         """
@@ -103,7 +135,11 @@ class Md(QuoteApi):
             k = self._kline_handle_map[symbol_code]
         k.do(df)
 
-    def on_subscribe_all_market_data(self, exchange_id: int, error: dict):
+    def on_subscribe_all_market_data(
+            self,
+            exchange_id: int,
+            error: dict
+    ) -> None:
         """
         订阅全市场的股票行情应答
 
@@ -112,7 +148,12 @@ class Md(QuoteApi):
         """
         logger.info(f"<XTP> [on_subscribe_all_market_data] {exchange_id}")
 
-    def on_sub_market_data(self, ticker: dict, error_info: dict, is_last: bool):
+    def on_sub_market_data(
+            self,
+            ticker: dict,
+            error_info: dict,
+            is_last: bool
+    ) -> None:
         """
         订阅行情应答,包括股票、指数和期权
         *每条订阅的合约均对应一条订阅应答,需要快速返回,否则会堵塞后续消息,当堵塞严重时,会触发断线
@@ -125,7 +166,11 @@ class Md(QuoteApi):
         logger.info(f"<XTP> [on_sub_market_data] {ticker}")
 
 
-def start(config_path: str, queue: Queue, sub_symbol_codes: list[str]):
+def start(
+        config_path: str,
+        queue: Queue,
+        sub_symbol_codes: list[str]
+) -> None:
     xtp_config = yaml.safe_load(open(config_path, encoding="utf-8"))
     USER = xtp_config["user"]
     PASS = xtp_config["pass"]
@@ -179,8 +224,8 @@ def start(config_path: str, queue: Queue, sub_symbol_codes: list[str]):
     while int(datetime.now().strftime("%H%M%S")) <= 999999:  # 150200:
         pass
 
+    logger.info("XTP Work Done.")
 
-logger.info("XTP Work Done.")
 
 if __name__ == "__main__":
     pass

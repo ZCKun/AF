@@ -71,7 +71,12 @@ class MarketSpi(MdApiPy):
         self._request_id += 1
         return self._request_id
 
-    def OnRspError(self, pRspInfo, nRequestID, bIsLast):
+    def OnRspError(
+            self,
+            pRspInfo,
+            nRequestID,
+            bIsLast
+    ) -> None:
         logger.error("<CTP> [OnRspError] Info:{pRspInfo}, RequestID:{nRequestID}, IsLast:{bIsLast}")
 
     def OnFrontConnected(self):
@@ -94,7 +99,13 @@ class MarketSpi(MdApiPy):
         """
         logger.error(f"<CTP> [OnHeartBeatWarning] Md OnHeartBeatWarning, time:{nTimeLapse}")
 
-    def OnRspUserLogin(self, pRspUserLogin, pRspInfo, pRequestID, bIsLast):
+    def OnRspUserLogin(
+            self,
+            pRspUserLogin,
+            pRspInfo,
+            pRequestID,
+            bIsLast
+    ) -> None:
         """
         用户登录应答
         :param pRspUserLogin:
@@ -109,7 +120,10 @@ class MarketSpi(MdApiPy):
             self._login = True
             logger.info(f"✓ Login Successfully, RspUserLogin:{pRspUserLogin}, RspInfo: {pRspInfo}")
 
-    def OnRtnDepthMarketData(self, depth_market_data: DepthMarketDataField):
+    def OnRtnDepthMarketData(
+            self,
+            depth_market_data: DepthMarketDataField
+    ) -> None:
         """
         行情订阅推送信息
         :param depth_market_data:
@@ -166,7 +180,13 @@ class MarketSpi(MdApiPy):
 
         self._kline_handle_map[symbol_code].do(message_process(df))
 
-    def OnRspSubMarketData(self, specific_instrument, rsp_info, request_id, is_last):
+    def OnRspSubMarketData(
+            self,
+            specific_instrument,
+            rsp_info,
+            request_id,
+            is_last
+    ) -> None:
         """
         订阅行情应答
         :param specific_instrument:
@@ -185,7 +205,13 @@ class MarketSpi(MdApiPy):
         k.subscribe(self.on_bar)
         self._kline_handle_map[instrument_id] = k
 
-    def OnRspUnSubMarketData(self, pSpecificInstrument, pRspInfo, nRequestID, bIsLast):
+    def OnRspUnSubMarketData(
+            self,
+            pSpecificInstrument,
+            pRspInfo,
+            nRequestID,
+            bIsLast
+    ) -> None:
         """
         取消订阅行情应答
         :param pSpecificInstrument:
@@ -219,7 +245,11 @@ class MarketSpi(MdApiPy):
         self.save()
 
 
-def start(config_path: str, queue: Queue, sub_instrument_id: list[str]):
+def start(
+        config_path: str,
+        queue: Queue,
+        sub_instrument_id: list[str]
+) -> None:
     """ 创建并启动 CTP 实例
 
     :param config_path: ctp 配置路径

@@ -18,15 +18,16 @@ class Mode(Enum):
 
 class AF:
 
-    def __init__(self,
-                 run_mode: Mode,
-                 enable_xtp: bool = False,
-                 enable_ctp: bool = False,
-                 end_time: Optional[int] = 150000,
-                 ctp_config_path: Optional[str] = "",
-                 xtp_config_path: Optional[str] = "",
-                 csv_config_path: Optional[str] = ""
-                 ):
+    def __init__(
+            self,
+            run_mode: Mode,
+            enable_xtp: bool = False,
+            enable_ctp: bool = False,
+            end_time: Optional[int] = 150000,
+            ctp_config_path: Optional[str] = "",
+            xtp_config_path: Optional[str] = "",
+            csv_config_path: Optional[str] = ""
+    ) -> None:
         """
 
         Args:
@@ -65,7 +66,10 @@ class AF:
         self._enable_xtp: bool = enable_xtp
         self._enable_ctp: bool = enable_ctp
 
-    def add_strategy(self, strategy: Strategy):
+    def add_strategy(
+            self,
+            strategy: Strategy
+    ) -> None:
         """
         append trade strategy
 
@@ -83,7 +87,10 @@ class AF:
         else:
             raise TypeError(f"not support strategy type of [{type(strategy)}].")
 
-    def _on_bar(self, event: Event):
+    def _on_bar(
+            self,
+            event: Event
+    ) -> None:
         """
         KLine event callback function
 
@@ -97,7 +104,10 @@ class AF:
             if s.type() == event.ex_type:
                 s.on_bar(event.data)
 
-    def _on_snapshot(self, event: Event):
+    def _on_snapshot(
+            self,
+            event: Event
+    ) -> None:
         """
         Snapshot event callback function
 
@@ -111,7 +121,10 @@ class AF:
             if s.type() == event.ex_type:
                 s.on_snapshot(event.data)
 
-    def _get_symbol_codes(self, _type) -> list[str]:
+    def _get_symbol_codes(
+            self,
+            _type
+    ) -> list[str]:
         """
         get the symbol code from strategies
 
@@ -129,7 +142,10 @@ class AF:
 
         return instrument_id
 
-    def _on_event(self, event: Event):
+    def _on_event(
+            self,
+            event: Event
+    ) -> None:
         """
         on event callback function
 
@@ -184,13 +200,13 @@ class AF:
                                 self._get_symbol_codes(StrategyType.CSV))
                           )
         process.start()
-        
+
         while int(datetime.now().strftime('%H%M%S')) < self._end_time:
             event: Event = self._event_queue.get()
             if not event:
                 continue
             self._on_event(event)
-        
+
         process.join()
 
     def start(self):
