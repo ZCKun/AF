@@ -74,17 +74,17 @@ class Backtesting(Strategy):
 
         self.price_lst: list[float] = list()
         self.dif_list: list[float] = [0]
-        self.ema1_lst: list[float] = [0]
-        self.ema2_lst: list[float] = [0]
-        self.dif_ema_lst: list[float] = [0]
+        self.ema1_lst: list[float] = [1]
+        self.ema2_lst: list[float] = [1]
+        self.dif_ema_lst: list[float] = [1]
 
         self.rsv_val = 9
         self.kval = 3
         self.dval = 3
         self.rsv_lst: list[float] = list()
-        self.rsv_ema_lst: list[float] = [0]
+        self.rsv_ema_lst: list[float] = [1]
         self.k_list: list[float] = list()
-        self.k_ema_lst: list[float] = [0]
+        self.k_ema_lst: list[float] = [1]
         self.low_price_lst: list[float] = list()
         self.high_price_lst: list[float] = list()
 
@@ -106,6 +106,7 @@ class Backtesting(Strategy):
     ) -> float:
         """
         DIF
+        the price of short period ema - the price of long period ema
 
         Args:
             price:
@@ -117,13 +118,11 @@ class Backtesting(Strategy):
 
         """
         ma1 = ema(price, period_s, self.ema1_lst[-1])
-        # ma1 = ema(self.price_lst, 12, ema_lst=self.ema1_lst)
         ma2 = ema(price, period_l, self.ema2_lst[-1])
-        # ma2 = ema(self.price_lst, 26, ema_lst=self.ema2_lst)
         self.ema1_lst.append(ma1)
         self.ema2_lst.append(ma2)
 
-        dif = (ma1 - ma2)  # / close_price
+        dif = ma1 - ma2
         return dif
 
     def dea(
@@ -352,18 +351,18 @@ class Backtesting(Strategy):
         self.low_price_lst.append(bar.low)
         self.high_price_lst.append(bar.high)
 
-        last_close_price = self.bar_data_lst[-2].close if len(self.bar_data_lst) >= 2 else bar.close
-        rsi, last_um, last_dm = \
-            self.rsi(bar.close, last_close_price, 6,
-                     self.last_up_ema_lst[-1], self.last_down_ema_lst[-1])
-        self.last_up_ema_lst.append(last_um)
-        self.last_down_ema_lst.append(last_dm)
-        logger.debug(f"{bar.datetime.strftime('%Y-%m-%d %H:%M:%S')} - RSI6:{rsi}, um:{last_um}, dm:{last_dm}")
+        # last_close_price = self.bar_data_lst[-2].close if len(self.bar_data_lst) >= 2 else bar.close
+        # rsi, last_um, last_dm = \
+        #     self.rsi(bar.close, last_close_price, 6,
+        #              self.last_up_ema_lst[-1], self.last_down_ema_lst[-1])
+        # self.last_up_ema_lst.append(last_um)
+        # self.last_down_ema_lst.append(last_dm)
+        # logger.debug(f"{bar.datetime.strftime('%Y-%m-%d %H:%M:%S')} - RSI6:{rsi}, um:{last_um}, dm:{last_dm}")
 
-        # macd, dif, dea = self.macd(close_price, 12, 26, 9)
-        # if bar.datetime.year > 2018:
-        #     logger.debug(f"{bar.datetime.strftime('%Y-%m-%d %H:%M:%S')} - MACD:{macd},DIF:{dif},DEA:{dea},"
-        #                  f"ma12:{self.ema1_lst[-1]},ma26:{self.ema2_lst[-1]}")
+        macd, dif, dea = self.macd(close_price, 12, 26, 9)
+        if bar.datetime.year > 2018:
+            logger.debug(f"{bar.datetime.strftime('%Y-%m-%d %H:%M:%S')} - MACD:{macd},DIF:{dif},DEA:{dea},"
+                         f"ma12:{self.ema1_lst[-1]},ma26:{self.ema2_lst[-1]}")
 
         # k, d, j = self.kdj(close_price,
         #                    period_rsv=self.rsv_val,
