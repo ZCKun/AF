@@ -327,12 +327,15 @@ class Backtesting(Strategy):
         diff = base - last
         up = 0
         down = 0
+        # 上涨 or 下跌
         if diff > 0:
             up = diff
         else:
             down = abs(diff)
+        # 计算各自的 ema
         up_ema = ema(up, period, last_up_ema)
         down_ema = ema(down, period, last_down_ema)
+        # 计算 rsi
         rs = 0
         if down_ema != 0:
             rs = up_ema / down_ema
