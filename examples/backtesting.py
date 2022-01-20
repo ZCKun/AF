@@ -6,9 +6,8 @@ from A.types import KLine
 from A import AF, AFMode, Strategy, logger, StrategyType
 
 import pandas as pd
-import talib as ta
 from typing import Optional
-from A.indicator import ema, calc_macd, calc_rsi
+from A.indicator import ema, calc_macd, calc_rsi, calc_sar
 
 KDJ_WEIGHT_K = 3.0
 KDJ_WEIGHT_D = 2.0
@@ -95,84 +94,6 @@ class Backtesting(Strategy):
 
         return k, d, j
 
-    def sar(
-            self,
-            last_sar: float,
-            bull: bool,
-            wtf_high_price: float = 0,
-            wtf_low_price: float = 0,
-            af: Optional[float] = 0.02,
-            base_af: Optional[float] = 0.02,
-            max_af: Optional[float] = 0.2
-    ) -> tuple[float, float, float, float, float]:
-        """
-        SAR indicator
-
-        Args:
-            last_sar: 历史 SAR
-            bull: 历史 bull
-            wtf_high_price: some high price?
-            wtf_low_price: some low price?
-            af: 历史 AF
-            base_af: 基础值 AF
-            max_af: 最大 AF
-
-        Returns:
-            tuple[float, float, float, float, float]: sar, af, bull, wtf_high_price, wtf_low_price
-
-        """
-        if len(self.bar_df) == 0:
-            return 0, af, bull, wtf_high_price, wtf_low_price
-        elif len(self.bar_df) < 3:
-            return self.bar_df.iloc[-1].close, af, bull, wtf_high_price, wtf_low_price
-
-        bar = self.bar_df.iloc[-1]
-        last_bar = self.bar_df.iloc[-2]
-        high_price = bar.high
-        low_price = bar.low
-        last_high_price = last_bar.high
-        last_low_price = last_bar.low
-
-        reverse = False
-        if bull:
-            sar = last_sar + af * (wtf_high_price - last_sar)
-        else:
-            sar = last_sar + af * (wtf_low_price - last_sar)
-        if bull:
-            if low_price < sar:
-                bull = False
-                reverse = True
-                sar = wtf_high_price
-                wtf_low_price = low_price
-                af = base_af
-        else:
-            if high_price > sar:
-                bull = True
-                reverse = True
-                sar = wtf_low_price
-                wtf_high_price = high_price
-                af = base_af
-
-        if not reverse:
-            if bull:
-                if high_price > wtf_high_price:
-                    wtf_high_price = high_price
-                    af = min(af + base_af, max_af)
-                if last_low_price < sar:
-                    sar = last_low_price
-                if last_bar.low < sar:
-                    sar = last_bar.low
-            else:
-                if low_price < wtf_low_price:
-                    wtf_low_price = low_price
-                    af = min(af + base_af, max_af)
-                if last_high_price > sar:
-                    sar = last_high_price
-                if last_bar.high > sar:
-                    sar = last_bar.high
-
-        return sar, af, bull, wtf_high_price, wtf_low_price
-
     def test_rsi(self, bar: KLine):
         # test pass
         rsi6 = calc_rsi(self.af, 'close', 6)
@@ -195,11 +116,12 @@ class Backtesting(Strategy):
 
     def test_sar(self, bar: KLine):
         if self.wtf_hp == 0:
-            self.wtf_hp = self.bar_df.iloc[0].high
+            self.wtf_hp = self.af.bar_data.iloc[0].high
         if self.wtf_lp == 0:
-            self.wtf_lp = self.bar_df.iloc[0].low
+            self.wtf_lp = self.af.bar_data.iloc[0].low
         self.last_sar, self.last_af, self.last_bull, self.wtf_hp, self.wtf_lp = \
-            self.sar(
+            calc_sar(
+                self.af,
                 self.last_sar,
                 self.last_bull,
                 self.wtf_hp,
@@ -220,9 +142,9 @@ class Backtesting(Strategy):
         self.high_price_lst.append(bar.high)
 
         self.test_rsi(bar)
-        # self.test_macd(bar)
-        # self.test_kdj(bar)
-        # self.test_sar(bar)
+        self.test_macd(bar)
+        self.test_kdj(bar)
+        self.test_sar(bar)
 
     def on_snapshot(
             self,

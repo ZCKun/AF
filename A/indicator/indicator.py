@@ -121,3 +121,83 @@ def calc_macd(
     macd = 2 * (dif - dea)
     last_dea[0] = dea
     return macd, dif, dea
+
+
+def calc_sar(
+        af: AF,
+        last_sar: float,
+        bull: bool,
+        wtf_high_price: float = 0,
+        wtf_low_price: float = 0,
+        af_init: Optional[float] = 0.02,
+        base_af: Optional[float] = 0.02,
+        max_af: Optional[float] = 0.2
+) -> tuple[float, float, float, float, float]:
+    """
+    SAR indicator
+
+    Args:
+        af:
+        last_sar: 历史 SAR
+        bull: 历史 bull
+        wtf_high_price: some high price?
+        wtf_low_price: some low price?
+        af_init: 历史 AF
+        base_af: 基础值 AF
+        max_af: 最大 AF
+
+    Returns:
+        tuple[float, float, float, float, float]: sar, af, bull, wtf_high_price, wtf_low_price
+
+    """
+    if len(af.bar_data) == 0:
+        return 0, af_init, bull, wtf_high_price, wtf_low_price
+    elif len(af.bar_data) < 3:
+        return af.bar_data.iloc[-1].close, af_init, bull, wtf_high_price, wtf_low_price
+
+    bar = af.bar_data.iloc[-1]
+    last_bar = af.bar_data.iloc[-2]
+    high_price = bar.high
+    low_price = bar.low
+    last_high_price = last_bar.high
+    last_low_price = last_bar.low
+
+    reverse = False
+    if bull:
+        sar = last_sar + af_init * (wtf_high_price - last_sar)
+    else:
+        sar = last_sar + af_init * (wtf_low_price - last_sar)
+    if bull:
+        if low_price < sar:
+            bull = False
+            reverse = True
+            sar = wtf_high_price
+            wtf_low_price = low_price
+            af_init = base_af
+    else:
+        if high_price > sar:
+            bull = True
+            reverse = True
+            sar = wtf_low_price
+            wtf_high_price = high_price
+            af_init = base_af
+
+    if not reverse:
+        if bull:
+            if high_price > wtf_high_price:
+                wtf_high_price = high_price
+                af_init = min(af_init + base_af, max_af)
+            if last_low_price < sar:
+                sar = last_low_price
+            if last_bar.low < sar:
+                sar = last_bar.low
+        else:
+            if low_price < wtf_low_price:
+                wtf_low_price = low_price
+                af_init = min(af_init + base_af, max_af)
+            if last_high_price > sar:
+                sar = last_high_price
+            if last_bar.high > sar:
+                sar = last_bar.high
+
+    return sar, af_init, bull, wtf_high_price, wtf_low_price
