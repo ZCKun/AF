@@ -20,12 +20,6 @@ class Backtesting(Strategy):
         self._type = StrategyType.CSV
         self.sub_symbol_code = ['399905.SZ']
 
-        self.price_lst: list[float] = list()
-        self.dif_list: list[float] = [0]
-        self.ema1_lst: list[float] = [1]
-        self.ema2_lst: list[float] = [1]
-        self.dif_ema_lst: list[float] = [1]
-
         self.rsv_val = 9
         self.kval = 3
         self.dval = 3
@@ -36,6 +30,7 @@ class Backtesting(Strategy):
         self.low_price_lst: list[float] = list()
         self.high_price_lst: list[float] = list()
 
+        # sar cache
         self.last_sar: float = 0
         self.last_bull: bool = True
         self.wtf_hp: float = 0
@@ -137,7 +132,6 @@ class Backtesting(Strategy):
             bar: KLine
     ) -> None:
         close_price = bar.close
-        self.price_lst.append(close_price)
         self.low_price_lst.append(bar.low)
         self.high_price_lst.append(bar.high)
 

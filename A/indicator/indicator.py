@@ -7,11 +7,23 @@ from typing import Optional, Any
 
 
 class T:
+    """ just for cache """
     @staticmethod
     def cache(
             param_name: Optional[str] = None,
             param: Optional[Any] = None
     ):
+        """
+        cache variables, currently only one variable is supported. :p
+
+        Args:
+            param_name: variable name
+            param: variables in variable
+
+        Returns:
+            wrapper
+
+        """
         def _cache(func):
             @functools.wraps(func)
             def wrapper(*args, **kwargs):
@@ -93,7 +105,10 @@ def calc_dea(
     return dif_ema
 
 
-@T.cache(param_name='last_dea', param=[0])
+@T.cache(
+    param_name='last_dea',
+    param=[0]
+)
 def calc_macd(
         price: float,
         period_s: int,
