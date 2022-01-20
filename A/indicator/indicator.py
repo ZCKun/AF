@@ -1,9 +1,29 @@
 import talib as ta
+import functools
+
 from A import AF
-from .base import *
+from .base import ema
+from typing import Optional, Any
 
 
-def rsi(
+class T:
+    @staticmethod
+    def cache(
+            param_name: Optional[str] = None,
+            param: Optional[Any] = None
+    ):
+        def _cache(func):
+            @functools.wraps(func)
+            def wrapper(*args, **kwargs):
+                kwargs[param_name] = param
+                return func(*args, **kwargs)
+
+            return wrapper
+
+        return _cache
+
+
+def calc_rsi(
         af: AF,
         base: str,
         period: int
@@ -14,10 +34,18 @@ def rsi(
     return ta.RSI(af.bar_data[base], period).iloc[-1]
 
 
-def dif(
+@T.cache(
+    param_name='emas',
+    param={
+        '1': [1],
+        '2': [1]
+    }
+)
+def calc_dif(
         price: float,
         period_s: int,
-        period_l: int
+        period_l: int,
+        emas: Optional[dict[str, list]] = None
 ) -> float:
     """
     DIF
@@ -27,21 +55,24 @@ def dif(
         price:
         period_s:
         period_l:
+        emas:
 
     Returns:
         float: dif value
 
     """
-    ma1 = ema(price, period_s, self.ema1_lst[-1])
-    ma2 = ema(price, period_l, self.ema2_lst[-1])
-    self.ema1_lst.append(ma1)
-    self.ema2_lst.append(ma2)
+    ema1_lst = emas['1']
+    ema2_lst = emas['2']
+    ma1 = ema(price, period_s, ema1_lst[-1])
+    ma2 = ema(price, period_l, ema2_lst[-1])
+    ema1_lst.append(ma1)
+    ema2_lst.append(ma2)
 
     dif = ma1 - ma2
     return dif
 
 
-def dea(
+def calc_dea(
         dif: float,
         period: int,
         last_dea: float
@@ -62,12 +93,13 @@ def dea(
     return dif_ema
 
 
-def macd(
+@T.cache(param_name='last_dea', param=[0])
+def calc_macd(
         price: float,
         period_s: int,
         period_l: int,
         period_m: int,
-        last_dea: float
+        last_dea: list[float]
 ) -> tuple[float, float, float]:
     """MACD indicator
 
@@ -84,8 +116,8 @@ def macd(
         tuple[float, float, float]: macd, dif, dea
 
     """
-    dif = dif(price, period_s, period_l)
-    dea = dea(dif, period_m, last_dea)
+    dif = calc_dif(price, period_s, period_l)
+    dea = calc_dea(dif, period_m, last_dea[0])
     macd = 2 * (dif - dea)
-    self.dif_list.append(dif)
+    last_dea[0] = dea
     return macd, dif, dea

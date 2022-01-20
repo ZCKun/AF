@@ -5,68 +5,10 @@ from A.types import KLine
 
 from A import AF, AFMode, Strategy, logger, StrategyType
 
-import numpy as np
 import pandas as pd
 import talib as ta
 from typing import Optional
-
-
-def sma(
-        n: int,
-        price_lst: list[float]
-) -> float:
-    if (size := len(price_lst)) < n:
-        return 0
-    prices = price_lst[size - n:]
-    return sum(prices) / n
-
-
-def ewma(
-        array: np.ndarray,
-        period: int,
-        init: float
-):
-    """Exponentially weighted moving average
-    https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average
-    with
-    - init value as `50.0`
-    - alpha as `1 / period`
-    """
-
-    # If there is no value k or value d of the previous day,
-    # then use 50.0
-    k = init
-    alpha = 1. / period
-    base = 1 - alpha
-
-    for i in array:
-        k = base * k + alpha * i
-        yield k
-
-
-def ema(
-        price: float,
-        period: int,
-        last_ema: float,
-        span: bool = True
-) -> float:
-    """
-    Calculate exponential weighted (EW).
-
-    Args:
-        price: target price
-        period: Specify decay in terms
-        last_ema: before ema value
-        span: Specify decay in terms of span. if true, alpha = 2 / (period + 1)
-
-    Returns:
-        float: ema value
-
-    """
-    alpha = 2. / (period + 1) if span else 1. / period
-    base = 1 - alpha
-    return last_ema * base + alpha * price
-
+from A.indicator import ema, calc_macd, calc_rsi
 
 KDJ_WEIGHT_K = 3.0
 KDJ_WEIGHT_D = 2.0
@@ -105,81 +47,6 @@ class Backtesting(Strategy):
         self.last_down_ema_lst: list[float] = [0]
 
         self.bar_df: Optional[pd.DataFrame] = None
-
-    def dif(
-            self,
-            price: float,
-            period_s: int,
-            period_l: int
-    ) -> float:
-        """
-        DIF
-        the price of short period ema - the price of long period ema
-
-        Args:
-            price:
-            period_s:
-            period_l:
-
-        Returns:
-            float: dif value
-
-        """
-        ma1 = ema(price, period_s, self.ema1_lst[-1])
-        ma2 = ema(price, period_l, self.ema2_lst[-1])
-        self.ema1_lst.append(ma1)
-        self.ema2_lst.append(ma2)
-
-        dif = ma1 - ma2
-        return dif
-
-    def dea(
-            self,
-            period: int,
-            dif: float
-    ) -> float:
-        """
-        DEA
-
-        Args:
-            period: period
-            dif:
-
-        Returns:
-            float: dea value
-
-        """
-        dif_ema = ema(dif, period, self.dif_ema_lst[-1])
-        dea = dif_ema  # / close_price
-        self.dif_ema_lst.append(dif_ema)
-        return dea
-
-    def macd(
-            self,
-            price: float,
-            period_s: int,
-            period_l: int,
-            period_m: int
-    ) -> tuple[float, float, float]:
-        """MACD indicator
-
-        有些小问题
-
-        Args:
-            price:
-            period_s: the period of DIFF short
-            period_l: the period of DIFF long
-            period_m: the period of DEA
-
-        Returns:
-            tuple[float, float, float]: macd, dif, dea
-
-        """
-        dif = self.dif(price, period_s, period_l)
-        dea = self.dea(period_m, dif)
-        macd = 2 * (dif - dea)
-        self.dif_list.append(dif)
-        return macd, dif, dea
 
     def kdj(
             self,
@@ -306,70 +173,17 @@ class Backtesting(Strategy):
 
         return sar, af, bull, wtf_high_price, wtf_low_price
 
-    def rsi(
-            self,
-            base: str,
-            period: int
-    ) -> float:
-        l = len(self.af.bar_data)
-        if l < period:
-            return 0
-        return ta.RSI(self.af.bar_data[base], period).iloc[-1]
-
-    def _rsi(
-            self,
-            base: float,
-            last: float,
-            period: int,
-            last_up_ema: float,
-            last_down_ema: float
-    ) -> tuple[float, float, float]:
-        """
-        RSI indicator
-
-        Args:
-            base: 当前价格
-            last: 历史价格
-            period: 区间
-            last_up_ema: 历史 up ema
-            last_down_ema: 历史 down ema
-
-        Returns:
-            tuple[float, float, float]: rsi, up ema, down ema
-
-        """
-        if len(self.bar_df) <= period:
-            return 0, last_up_ema, last_down_ema
-
-        diff = base - last
-        up = 0
-        down = 0
-        # 上涨 or 下跌
-        if diff > 0:
-            up = diff
-        else:
-            down = abs(diff)
-        # 计算各自的 ema
-        up_ema = ema(up, period, last_up_ema)
-        down_ema = ema(down, period, last_down_ema)
-        # 计算 rsi
-        rs = 0
-        if down_ema != 0:
-            rs = up_ema / down_ema
-        rsi = 100 - 100 / (1 + rs)
-        return rsi, up_ema, down_ema
-
     def test_rsi(self, bar: KLine):
-        rsi6 = self.rsi('close', 6)
-        rsi12 = self.rsi('close', 12)
-        rsi24 = self.rsi('close', 24)
+        # test pass
+        rsi6 = calc_rsi(self.af, 'close', 6)
+        rsi12 = calc_rsi(self.af, 'close', 12)
+        rsi24 = calc_rsi(self.af, 'close', 24)
         logger.debug(f"{bar.datetime.strftime('%Y-%m-%d %H:%M:%S')} - RSI6:{rsi6}, RSI12:{rsi12}, RSI24:{rsi24}")
 
     def test_macd(self, bar: KLine):
-        macd, dif, dea = self.macd(bar.close, 12, 26, 9)
-        if bar.datetime.year > 2018:
-            logger.debug(f"{bar.datetime.strftime('%Y-%m-%d %H:%M:%S')} - MACD:{macd},DIF:{dif},DEA:{dea},"
-                         f"ma12:{self.ema1_lst[-1]},ma26:{self.ema2_lst[-1]}")
+        # test pass
+        macd, dif, dea = calc_macd(bar.close, 12, 26, 9)
+        logger.debug(f"{bar.datetime.strftime('%Y-%m-%d %H:%M:%S')} - MACD:{macd},DIF:{dif},DEA:{dea}")
 
     def test_kdj(self, bar: KLine):
         k, d, j = self.kdj(bar.close,
@@ -400,11 +214,6 @@ class Backtesting(Strategy):
             self,
             bar: KLine
     ) -> None:
-        # if self.bar_df is None:
-        #     self.bar_df = pd.DataFrame([bar])
-        # else:
-        #     self.bar_df = self.bar_df.append(bar.__dict__, ignore_index=True, sort=False)
-
         close_price = bar.close
         self.price_lst.append(close_price)
         self.low_price_lst.append(bar.low)
