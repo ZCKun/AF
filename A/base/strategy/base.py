@@ -1,4 +1,7 @@
 from abc import ABC
+from typing import Optional
+
+import A
 
 
 class Strategy(ABC):
@@ -6,6 +9,7 @@ class Strategy(ABC):
     def __init__(self):
         self._type = ...
         self._sub_codes: list[str] = list()
+        self.af: Optional[A.AF] = None
 
     def type(self):
         return self._type

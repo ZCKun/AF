@@ -1,5 +1,7 @@
 import os.path
 
+import pandas as pd
+
 from A.log import logger
 from A.base.strategy.base import Strategy
 from A.adapter import ctp_start, xtp_start, csv_start
@@ -66,6 +68,12 @@ class AF:
         self._enable_xtp: bool = enable_xtp
         self._enable_ctp: bool = enable_ctp
 
+        self._bar_data: Optional[pd.DataFrame] = None
+
+    @property
+    def bar_data(self):
+        return self._bar_data
+
     def add_strategy(
             self,
             strategy: Strategy
@@ -83,6 +91,7 @@ class AF:
             TypeError: unknown strategy type
         """
         if isinstance(strategy, Strategy):
+            strategy.af = self
             self._strategies.append(strategy)
         else:
             raise TypeError(f"not support strategy type of [{type(strategy)}].")
@@ -102,7 +111,12 @@ class AF:
         """
         for s in self._strategies:
             if s.type() == event.ex_type:
-                s.on_bar(event.data)
+                bar = event.data
+                if self._bar_data is None:
+                    self._bar_data = pd.DataFrame([bar])
+                else:
+                    self._bar_data = self._bar_data.append(bar.__dict__, ignore_index=True, sort=False)
+                s.on_bar(bar)
 
     def _on_snapshot(
             self,
