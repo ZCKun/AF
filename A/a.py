@@ -25,12 +25,13 @@ class AF:
             run_mode: Mode,
             enable_xtp: bool = False,
             enable_ctp: bool = False,
-            end_time: Optional[int] = 150000,
-            ctp_config_path: Optional[str] = "",
-            xtp_config_path: Optional[str] = "",
-            csv_config_path: Optional[str] = ""
+            end_time: int = 150000,
+            ctp_config_path: str = "",
+            xtp_config_path: str = "",
+            csv_config_path: str = ""
     ) -> None:
         """
+        AF
 
         Args:
             run_mode(:obj:`A.AFMode`): the AF running mode
@@ -71,7 +72,7 @@ class AF:
         self._bar_data: Optional[pd.DataFrame] = None
 
     @property
-    def bar_data(self):
+    def bar_data(self) -> pd.DataFrame:
         return self._bar_data
 
     def add_strategy(
@@ -174,7 +175,7 @@ class AF:
         elif event.event_type == EventType.KLINE_DATA:
             self._on_bar(event)
 
-    def _start_with_normal(self):
+    def _start_with_normal(self) -> None:
         ctp_process = None
         xtp_process = None
 
@@ -205,7 +206,7 @@ class AF:
         if xtp_process is not None:
             xtp_process.terminate()
 
-    def _start_with_backtesting(self):
+    def _start_with_backtesting(self) -> None:
         # csv_start(self._csv_config_path, self._event_queue, self._get_symbol_codes(StrategyType.CSV))
 
         process = Process(target=csv_start,
@@ -223,7 +224,7 @@ class AF:
 
         process.join()
 
-    def start(self):
+    def start(self) -> None:
         logger.info("AFramework start work")
         if self._run_mode == Mode.NORMAL:
             self._start_with_normal()

@@ -131,7 +131,6 @@ class Backtesting(Strategy):
             self,
             bar: KLine
     ) -> None:
-        close_price = bar.close
         self.low_price_lst.append(bar.low)
         self.high_price_lst.append(bar.high)
 
