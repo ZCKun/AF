@@ -1,11 +1,12 @@
 <div align="center">
     <h1>AF</h1>
-    <p>
-    ![](https://img.shields.io/badge/python-3.9%2B-green)
-    </p>
+
+![](https://img.shields.io/badge/python-3.9%2B-green)
+
 </div>
 
 ## Quick Start
+
 
 Please refer to examples in the examples' directory.
 
