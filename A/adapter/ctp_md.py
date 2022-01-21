@@ -19,13 +19,16 @@ TODAY_DT = datetime.today()
 TODAY_DT_STR = TODAY_DT.strftime('%Y%m%d')
 
 
-def message_process(df: pd.DataFrame):
+def message_process(
+        df: pd.DataFrame
+) -> pd.DataFrame:
     data_df = df.rename(columns={
         'InstrumentID': 'symbol_code',
         'TradingDay': 'date',
         'LastPrice': 'last_price',
         'UpdateMillisec': 'last_modified_mil',
-        'UpdateTime': 'last_modified'
+        'UpdateTime': 'last_modified',
+        'Volume': 'volume',
     })
     last_modified_arr = data_df.last_modified.to_numpy(dtype=str)
     last_modified_mil_arr = data_df.last_modified_mil.to_numpy(dtype=str)
@@ -39,7 +42,13 @@ def message_process(df: pd.DataFrame):
 
 class MarketSpi(MdApiPy):
 
-    def __init__(self, config: dict, queue: Queue, *args, **kwargs):
+    def __init__(
+            self,
+            config: dict,
+            queue: Queue,
+            *args,
+            **kwargs
+    ) -> None:
         super().__init__(*args, **kwargs)
         self._login = False
         self._queue: Queue = queue
@@ -104,7 +113,7 @@ class MarketSpi(MdApiPy):
             pRspUserLogin,
             pRspInfo,
             pRequestID,
-            bIsLast
+            bIsLast: bool
     ) -> None:
         """
         用户登录应答
@@ -273,19 +282,22 @@ def start(
     trading_day = market.GetTradingDay()
     logger.info(f"<CTP> trading day: {trading_day}")
 
-    if market.is_login():
-        market.SubscribeMarketData(sub_instrument_id)
-        stop_time: int = int(config['stop_time']) if 'stop_time' in config else 150500
-        while True:
-            if int(datetime.now().strftime('%H%M%S')) >= stop_time:
-                market.UnSubscribeMarketData(sub_instrument_id)
-                break
-            time.sleep(1)
-    else:
-        logger.error(f"<CTP> login fail.")
-
-    market.save()
-    logger.info("ctp work done.")
+    try:
+        if market.is_login():
+            market.SubscribeMarketData(sub_instrument_id)
+            stop_time: int = int(config['stop_time']) if 'stop_time' in config else 150500
+            while True:
+                if int(datetime.now().strftime('%H%M%S')) >= stop_time:
+                    market.UnSubscribeMarketData(sub_instrument_id)
+                    break
+                time.sleep(1)
+        else:
+            logger.error(f"<CTP> login fail.")
+    except KeyboardInterrupt:
+        pass
+    finally:
+        market.save()
+        logger.info("ctp work done.")
 
 
 if __name__ == "__main__":

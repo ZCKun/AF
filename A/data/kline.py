@@ -15,7 +15,7 @@ def generator_period_dt(interval: int,
         start = start_dt
 
     if replace_date is not None:
-        start.replace(year=replace_date.year, month=replace_date.month, day=replace_date.day)
+        start = start.replace(year=replace_date.year, month=replace_date.month, day=replace_date.day)
 
     i = int(start.strftime('%H%M%S'))
     weekday = datetime.weekday(datetime.today())
@@ -31,7 +31,7 @@ def generator_period_dt(interval: int,
         if start.time() > end.time():
             break
         if not (113000 < int(start.strftime('%H%M%S')) < 130100):
-            ret.append(start)
+            ret.append(start.replace(second=0, microsecond=0))
 
     return ret
 
@@ -79,6 +79,8 @@ class KLineHandle:
             t0_date: Optional[datetime] = None
     ):
         self._symbol_code = symbol_code
+        if t0_date is None:
+            t0_date = datetime.today()
         self._t0_date: datetime = t0_date
         self._interval = interval
 
@@ -134,6 +136,9 @@ class KLineHandle:
         start_date = last_modified_full.iloc[0]
         end_date = last_modified_full.iloc[-2]
 
+        volume_s = quote_cache_df['volume']
+        volume = volume_s.iloc[-1] - volume_s.iloc[0]
+
         if open_price > close_price:
             style = -1
         elif open_price < close_price:
@@ -147,7 +152,7 @@ class KLineHandle:
             close_price=close_price,
             high_price=high_price,
             low_price=low_price,
-            volume=0,
+            volume=volume,
             start_date=start_date,
             end_date=end_date,
             style=style,
