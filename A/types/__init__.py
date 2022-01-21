@@ -1,5 +1,5 @@
 from .kline import KLine
-from .base import BaseEntity, Price
+from .base import BaseEntity, Price, BuySell
 from .event import *
 from .strategy import StrategyType
 from .ctp import Snapshot as CTPSnapshot

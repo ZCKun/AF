@@ -1,6 +1,9 @@
-# AF
-
-![](https://img.shields.io/badge/python-3.9%2B-green)
+<div align="center">
+    <h1>AF</h1>
+    <p>
+    ![](https://img.shields.io/badge/python-3.9%2B-green)
+    </p>
+</div>
 
 ## Quick Start
 
@@ -53,7 +56,7 @@ def main():
 
 ## Reference
 
-[xtp_for_path](https://github.com/ZCKun/xtp-for-python)
+[xtp_for_python](https://github.com/ZCKun/xtp-for-python)
 
 ## Thanks
 

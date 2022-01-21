@@ -36,11 +36,23 @@ def generator_period_dt(interval: int,
     return ret
 
 
-def create_kline(symbol_code: str, open_price: float, close_price: float, high_price: float, low_price: float,
-                 volume: int, start_date: int, end_date: int, _date, style: Optional[int] = 0) -> KLine:
+def create_kline(
+        symbol_code: str,
+        open_price: float,
+        close_price: float,
+        high_price: float,
+        low_price: float,
+        volume: int,
+        change_percent: float,
+        start_date: int,
+        end_date: int,
+        _date,
+        style: Optional[int] = 0
+) -> KLine:
     """创建Kline对象
 
     Args:
+        change_percent: 涨跌幅
         symbol_code: 标的代码
         open_price: 开盘价
         close_price: 收盘价
@@ -61,6 +73,7 @@ def create_kline(symbol_code: str, open_price: float, close_price: float, high_p
     obj.high = high_price
     obj.low = low_price
     obj.volume = volume
+    obj.change_percent = change_percent
 
     obj.start_datetime = start_date
     obj.end_datetime = end_date
@@ -89,7 +102,7 @@ class KLineHandle:
         # self._yesterday_date = (datetime.today() - timedelta(days=10)).strftime('%Y%m%d')
 
         self.quotes = []
-        self.kline_lst = []
+        self.kline_lst: list[KLine] = []
 
         self._period = generator_period_dt(self._interval, self._t0_date)
 
@@ -146,6 +159,7 @@ class KLineHandle:
         else:
             style = 0
 
+        change_percent = ((close_price / self.kline_lst[-1].close) - 1) * 100
         kline = create_kline(
             symbol_code=self._symbol_code,
             open_price=open_price,
@@ -153,10 +167,12 @@ class KLineHandle:
             high_price=high_price,
             low_price=low_price,
             volume=volume,
+            change_percent=change_percent,
             start_date=start_date,
             end_date=end_date,
             style=style,
-            _date=self._kline_date)
+            _date=self._kline_date
+        )
 
         self.kline_lst.append(kline)
 

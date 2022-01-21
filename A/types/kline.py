@@ -31,6 +31,8 @@ class KLine(BaseEntity):
             #: K线时间范围内的成交量
             self.volume: int = 0
             self.turnover: float = float("nan")
+            # 涨跌幅
+            self.change_percent: float = float("nan")
             # #: K线起始时刻的持仓量
             # self.open_oi: int = 0
             # #: K线结束时刻的持仓量

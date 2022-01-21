@@ -1,6 +1,13 @@
 import copy
 import weakref
+
+from enum import Enum
 from collections.abc import MutableMapping
+
+
+class BuySell(Enum):
+    Buy = 1
+    Sell = 2
 
 
 class Price:

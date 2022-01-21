@@ -9,6 +9,7 @@ from A.log import logger
 from glob import glob
 from datetime import datetime
 from multiprocessing import Queue
+from typing import Optional
 
 
 class CsvMd:
@@ -29,6 +30,7 @@ class CsvMd:
         self._queue: Queue = queue
         self._symbols: list[str] = symbols
         self._kline_handle_map: dict[str, KLineHandle] = dict()
+        self._last_bar: Optional[KLine] = None
 
     def _on_bar(
             self,
@@ -86,20 +88,18 @@ class CsvMd:
             bar.close = row.close
             bar.volume = row.volume
             bar.turnover = row.money
-            bar.style = 1 if row.open > row.close else -1
+            bar.style = -1 if row.open > row.close else 1
+            if self._last_bar is not None:
+                bar.change_percent = (bar.close / self._last_bar.close) - 1 * 100
+            else:
+                bar.change_percent = 0.
+            self._last_bar = bar
 
             event = Event()
             event.data = bar
             event.ex_type = StrategyType.CSV
             event.event_type = EventType.KLINE_DATA
             self._queue.put(event)
-            # if symbol_code not in self._kline_handle_map:
-            #     k = KLineHandle(symbol_code, t0_date=row.date)
-            #     k.subscribe(self._on_bar)
-            #     self._kline_handle_map[symbol_code] = k
-            # else:
-            #     k = self._kline_handle_map[symbol_code]
-            # k.do(row)
 
     def _data_check(
             self,
