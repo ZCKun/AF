@@ -156,7 +156,6 @@ class KLineHandle:
             start_date=start_date,
             end_date=end_date,
             style=style,
-            # _date=kline_date)
             _date=self._kline_date)
 
         self.kline_lst.append(kline)
