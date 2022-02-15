@@ -159,7 +159,10 @@ class KLineHandle:
         else:
             style = 0
 
-        change_percent = ((close_price / self.kline_lst[-1].close) - 1) * 100
+        change_percent = .0
+        if len(self.kline_lst) > 0:
+            change_percent = ((close_price / self.kline_lst[-1].close) - 1) * 100
+
         kline = create_kline(
             symbol_code=self._symbol_code,
             open_price=open_price,

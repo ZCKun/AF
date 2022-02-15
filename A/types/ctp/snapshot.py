@@ -5,12 +5,14 @@ from A.types.base import BaseEntity, Price
 
 class Snapshot(BaseEntity):
 
+    trading_day: datetime.date
+
     # 合约代码
     instrument_id: str
     # 快照时间(处理后)
     time: datetime
     # 快照时间
-    update_time: int
+    update_time: datetime.time
     # 快照时间,毫秒部分
     update_ms: int
     # 最新价

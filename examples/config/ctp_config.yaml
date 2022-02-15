@@ -11,6 +11,7 @@
 investor_id: "172444"
 password: "zxc147258"
 broker_id: "9999"
+stop_time: 150500
 md_server:
   - "tcp://180.168.146.187:10211"
 user_product_info: "MagicQuant"

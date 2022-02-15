@@ -91,7 +91,7 @@ class Md(QuoteApi):
         :param error_info: 查询合约部分静态信息时发生错误时返回的错误信息,当error_info为空,或者error_info.error_id为0时,表明没有错误
         :param is_last: 是否此次查询合约部分静态信息的最后一个应答,当为最后一个的时候为true,如果为false,表示还有其他后续消息响应
         """
-        pass
+        print(ticker_info)
 
     def on_depth_market_data(
             self,
@@ -205,27 +205,60 @@ def start(
             else:
                 sh_codes.append({'ticker': s[:-3]})
 
-        if (count := len(sz_codes)) > 0:
-            s = md.subscribe_market_data(sz_codes, count, XTP_EXCHANGE_TYPE.XTP_EXCHANGE_SZ)
+        if len(sz_codes) == 0 and len(sh_codes) == 0:
+            s = md.subscribe_all_market_data(XTP_EXCHANGE_TYPE.XTP_EXCHANGE_UNKNOWN)
             if s != 0:
                 err = md.get_api_last_error()
-                logger.error(f"XTP Subscribe SZ market data failed, error:{err}")
+                logger.error(f"XTP Subscribe all market data failed, error:{err}")
             else:
-                logger.info("XTP Subscribe SZ market data success.")
+                logger.info("XTP Subscribe all market data success.")
+        else:
+            if (count := len(sz_codes)) > 0:
+                s = md.subscribe_market_data(sz_codes, count, XTP_EXCHANGE_TYPE.XTP_EXCHANGE_SZ)
+                if s != 0:
+                    err = md.get_api_last_error()
+                    logger.error(f"XTP Subscribe SZ market data failed, error:{err}")
+                else:
+                    logger.info("XTP Subscribe SZ market data success.")
 
-        if (count := len(sh_codes)) > 0:
-            s = md.subscribe_market_data(sh_codes, count, XTP_EXCHANGE_TYPE.XTP_EXCHANGE_SH)
-            if s != 0:
-                err = md.get_api_last_error()
-                logger.error(f"XTP Subscribe SH market data failed, error:{err}")
-            else:
-                logger.info("XTP Subscribe SH market data success.")
+            if (count := len(sh_codes)) > 0:
+                s = md.subscribe_market_data(sh_codes, count, XTP_EXCHANGE_TYPE.XTP_EXCHANGE_SH)
+                if s != 0:
+                    err = md.get_api_last_error()
+                    logger.error(f"XTP Subscribe SH market data failed, error:{err}")
+                else:
+                    logger.info("XTP Subscribe SH market data success.")
 
-    while int(datetime.now().strftime("%H%M%S")) <= 999999:  # 150200:
+    while int(datetime.now().strftime("%H%M%S")) <= 999999: #<= 150200:
         pass
 
     logger.info("XTP Work Done.")
 
 
 if __name__ == "__main__":
-    pass
+    xtp_config = yaml.safe_load(
+        open("/home/x2h1z/Work/python/AFramework/examples/config/xtp_config.yaml", encoding="utf-8"))
+    USER = xtp_config["user"]
+    PASS = xtp_config["pass"]
+    HOST = xtp_config["host"]
+    PORT = xtp_config["port"]
+    PROTOCOL_TYPE = xtp_config["socket_type"]
+    CLIENT_ID = xtp_config["client_id"]
+
+    md = Md(None)
+    md.create_quote_api(CLIENT_ID, os.getcwd(), XTP_LOG_LEVEL.XTP_LOG_LEVEL_DEBUG)
+    if md.login(HOST, PORT, USER, PASS, PROTOCOL_TYPE, "0") != 0:
+        logger.error(f"XTP Login failed! {md.get_api_last_error()}")
+        sys.exit(1)
+
+    logger.info(f"XTP Login Success, TradingDay: {md.get_trading_day()}")
+    md.trading_day = md.get_trading_day()
+    s = md.query_tickers_price_info([{'ticker': '000001'}], 1, XTP_EXCHANGE_TYPE.XTP_EXCHANGE_SZ)
+    if s != 0:
+        print("query ticker price info failed.")
+        exit(1)
+
+    print(s)
+
+    while True:
+        pass

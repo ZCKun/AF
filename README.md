@@ -39,7 +39,7 @@ class Strategy(CTPStrategy):
 
 def main():
     a = AF(
-        AFMode.NORMAL,  # work mode
+        AFMode.ONLINE,  # work mode
         ctp_config_path="config/ctp_config.yaml",
         enable_ctp=True
     )
