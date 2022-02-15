@@ -20,11 +20,11 @@ Simple Example
 
 ```python
 from A.types import KLine
-from A.types.ctp import Snapshot
-from A import AF, CTPStrategy, logger, AFMode
+from A.types.futures import Snapshot
+from A import AF, FuturesStrategy, logger, AFMode
 
 
-class Strategy(CTPStrategy):
+class Strategy(FuturesStrategy):
     def __init__(self):
         super().__init__()
         # set your need to subscribe symbols

@@ -1,2 +1,2 @@
-from .ctp import CTPStrategy
-from .xtp import XTPStrategy
+from .futures import FuturesStrategy
+from .stock import StockStrategy

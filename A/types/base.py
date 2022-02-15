@@ -9,63 +9,57 @@ class BuySell(Enum):
     Buy = 1
     Sell = 2
 
+def get_other_price(other):
+    if isinstance(other, Price):
+        other = other._price
+    elif isinstance(other, float):
+        other = int(other * 1000)
+
+    return other
+
 
 class Price:
 
     def __init__(self, value=0):
         try:
-            self._price = int(value * 1000)
+            self._price = int(float(value) * 1000)
         except OverflowError as e:
             self._price = 0
 
     def __lt__(self, other):
-        if isinstance(other, float):
-            other = int(other * 1000)
-        elif isinstance(other, Price):
-            other = other._price
-
-        return self._price < other
+        return self._price < get_other_price(other)
 
     def __gt__(self, other):
-        if isinstance(other, float):
-            other = int(other * 1000)
-        elif isinstance(other, Price):
-            other = other._price
-
-        return self._price > other
+        return self._price > get_other_price(other)
 
     def __le__(self, other):
-        if isinstance(other, float):
-            other = int(other * 1000)
-        elif isinstance(other, Price):
-            other = other._price
-
-        return self._price <= other
+        return self._price <= get_other_price(other)
 
     def __ne__(self, other):
-        if isinstance(other, float):
-            other = int(other * 1000)
-        elif isinstance(other, Price):
-            other = other._price
+        return self._price != get_other_price(other)
 
-        return self._price != other
+    def __eq__(self, other):
+        return self._price == get_other_price(other)
 
     def __ge__(self, other):
-        if isinstance(other, float):
-            other = int(other * 1000)
-        elif isinstance(other, Price):
-            other = other._price
-
-        return self._price >= other
+        return self._price >= get_other_price(other)
 
     def __add__(self, other):
-        if isinstance(other, Price):
-            other = other._price
-        elif isinstance(other, float):
-            other = int(other * 1000)
-
-        self._price += other
+        self._price += get_other_price(other)
         return self
+
+    def __sub__(self, other):
+        self._price -= get_other_price(other)
+        return self
+
+    def __truediv__(self, other):
+        return self._price / get_other_price(other)
+
+    def __rtruediv__(self, other):
+        return get_other_price(other) / self._price
+
+    def __mul__(self, other):
+        return self._price * get_other_price(other)
 
     def __repr__(self):
         return str(self._price / 1000)

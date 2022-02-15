@@ -18,8 +18,7 @@ def generator_period_dt(interval: int,
         start = start.replace(year=replace_date.year, month=replace_date.month, day=replace_date.day)
 
     i = int(start.strftime('%H%M%S'))
-    weekday = datetime.weekday(datetime.today())
-    if weekday in [5, 6] or not 93000 < i < 150000:
+    if i < 9_30_00 or i > 15_00_00:
         start = datetime.strptime('93000', '%H%M%S')
 
     end = datetime.strptime('150000', '%H%M%S')
@@ -44,9 +43,9 @@ def create_kline(
         low_price: float,
         volume: int,
         change_percent: float,
-        start_date: int,
-        end_date: int,
-        _date,
+        start_time: int,
+        end_time: int,
+        time: datetime.time,
         style: Optional[int] = 0
 ) -> KLine:
     """创建Kline对象
@@ -59,14 +58,14 @@ def create_kline(
         high_price: 最高价
         low_price:  最低价
         volume: 成交量
-        start_date: 开始时间
-        end_date: 结束时间
-        _date: 当前Kline所指的时间
+        start_time: 开始时间
+        end_time: 结束时间
+        time: 当前Kline所指的时间
         style: Kline样式; 0: 收盘价等于开盘价, 1: 阳线, -1: 阴线
     Returns: K线对象
     """
     obj = KLine()
-    obj.datetime = _date
+    obj.time = time
     obj.symbol_code = symbol_code
     obj.close = close_price
     obj.open = open_price
@@ -75,9 +74,8 @@ def create_kline(
     obj.volume = volume
     obj.change_percent = change_percent
 
-    obj.start_datetime = start_date
-    obj.end_datetime = end_date
-    obj.time = int(_date.strftime("%H%M%S"))
+    obj.start_time = start_time
+    obj.end_time = end_time
     obj.style = style
 
     return obj
@@ -99,12 +97,11 @@ class KLineHandle:
 
         self._quote_cache = []
         self._callbacks = []
-        # self._yesterday_date = (datetime.today() - timedelta(days=10)).strftime('%Y%m%d')
 
         self.quotes = []
         self.kline_lst: list[KLine] = []
 
-        self._period = generator_period_dt(self._interval, self._t0_date)
+        self._period = generator_period_dt(self._interval, replace_date=self._t0_date)
 
     def subscribe(self, callback):
         self._callbacks.append(callback)
@@ -112,11 +109,11 @@ class KLineHandle:
     def _is_end(self):
         if len(self._quote_cache) >= 3:
             try:
-                current_last_modified_full = self._quote_cache[-1].last_modified_full.iloc[0]
+                current_last_modified_full = self._quote_cache[-1]['data_time'].iloc[0]
             except AttributeError:
-                current_last_modified_full = self._quote_cache[-1].last_modified_full
+                current_last_modified_full = self._quote_cache[-1]['data_time']
 
-            if current_last_modified_full >= self._period[0].time():
+            if current_last_modified_full.time() >= self._period[0].time():
                 self._kline_date = self._period[0]
                 del self._period[0]
                 return True
@@ -137,8 +134,8 @@ class KLineHandle:
         """ 创建一根k线 """
         quote_cache_df = pd.concat(self._quote_cache)
 
-        last_price_series: Series = quote_cache_df.last_price.astype(float)
-        last_modified_full = quote_cache_df.last_modified_full
+        last_price_series: Series = quote_cache_df['last_price']
+        data_time_series: Series = quote_cache_df['data_time']
 
         open_price = last_price_series.iloc[0]
         close_price = last_price_series.iloc[-2]
@@ -146,11 +143,11 @@ class KLineHandle:
         high_price = last_price_series.max()
         low_price = last_price_series.min()
 
-        start_date = last_modified_full.iloc[0]
-        end_date = last_modified_full.iloc[-2]
+        start_date = data_time_series.iloc[0]
+        end_date = data_time_series.iloc[-2]
 
         volume_s = quote_cache_df['volume']
-        volume = volume_s.iloc[-1] - volume_s.iloc[0]
+        volume = volume_s.sum()
 
         if open_price > close_price:
             style = -1
@@ -160,8 +157,8 @@ class KLineHandle:
             style = 0
 
         change_percent = .0
-        if len(self.kline_lst) > 0:
-            change_percent = ((close_price / self.kline_lst[-1].close) - 1) * 100
+        if len(self.kline_lst) > 0 and (last_close_price := self.kline_lst[-1].close) != 0:
+            change_percent = ((close_price / last_close_price) - 1) * 100
 
         kline = create_kline(
             symbol_code=self._symbol_code,
@@ -171,10 +168,10 @@ class KLineHandle:
             low_price=low_price,
             volume=volume,
             change_percent=change_percent,
-            start_date=start_date,
-            end_date=end_date,
+            start_time=start_date.time(),
+            end_time=end_date.time(),
             style=style,
-            _date=self._kline_date
+            time=self._kline_date.time(),
         )
 
         self.kline_lst.append(kline)

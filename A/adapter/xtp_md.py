@@ -6,7 +6,7 @@ import pandas as pd
 from A.log import logger
 from A.sdk.xtp import QuoteApi
 from A.data import KLineHandle
-from A.types.xtp import Snapshot
+from A.types.stock import Snapshot
 from A.types import StrategyType
 from A.types import KLine, EventType, Event
 from A.sdk.xtp import XTP_EXCHANGE_TYPE, XTP_LOG_LEVEL
@@ -33,7 +33,7 @@ class Md(QuoteApi):
     ) -> None:
         event = Event()
         event.data = bar
-        event.ex_type = StrategyType.XTP
+        event.ex_type = StrategyType.STOCK
         event.event_type = EventType.KLINE_DATA
         self._queue.put(event)
 
@@ -115,7 +115,7 @@ class Md(QuoteApi):
         tick.max_ask1_count = max_ask1_count
         event = Event()
         event.data = tick
-        event.ex_type = StrategyType.XTP
+        event.ex_type = StrategyType.STOCK
         event.event_type = EventType.SNAPSHOT_DATA
         self._queue.put(event)
 

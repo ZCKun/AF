@@ -1,13 +1,13 @@
 from A.types import KLine, StrategyType
-from A.types.ctp import Snapshot
+from A.types.stock import Snapshot
 from .base import Strategy
 
 
-class CTPStrategy(Strategy):
+class StockStrategy(Strategy):
 
     def __init__(self):
         super().__init__()
-        self._type = StrategyType.CTP
+        self._type = StrategyType.STOCK
 
     def on_bar(self, bar: KLine):
         """ KLine 数据回调

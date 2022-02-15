@@ -1,13 +1,13 @@
 from A.types import KLine, StrategyType
-from A.types.xtp import Snapshot
+from A.types.futures import Snapshot
 from .base import Strategy
 
 
-class XTPStrategy(Strategy):
+class FuturesStrategy(Strategy):
 
     def __init__(self):
         super().__init__()
-        self._type = StrategyType.XTP
+        self._type = StrategyType.FUTURES
 
     def on_bar(self, bar: KLine):
         """ KLine 数据回调

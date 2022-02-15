@@ -1,11 +1,11 @@
 import sys
 sys.path.append("..")
 from A.types import KLine
-from A.types.ctp import Snapshot
-from A import AF, CTPStrategy, logger, AFMode, AFOptional, Market
+from A.types.futures import Snapshot
+from A import AF, FuturesStrategy, logger, AFMode, AFOptional, Market
 
 
-class Strategy(CTPStrategy):
+class Strategy(FuturesStrategy):
     def __init__(self):
         super().__init__()
         self.sub_symbol_code = [

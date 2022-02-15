@@ -8,7 +8,7 @@ from api.xtp_types import XTP_EXCHANGE_TYPE, XTP_PROTOCOL_TYPE, XTP_LOG_LEVEL
 
 
 config = json.load(open("config.json", encoding="utf-8"))
-xtp_config = config["xtp"]
+xtp_config = config["stock"]
 USER = xtp_config["user"]
 PASS = xtp_config["pass"]
 HOST = xtp_config["host"]

@@ -2,11 +2,11 @@ import sys
 import json
 sys.path.append("..")
 from A.types import KLine
-from A.types.ctp import Snapshot
-from A import AF, XTPStrategy, logger, AFMode, AFOptional, Market
+from A.types.futures import Snapshot
+from A import AF, StockStrategy, logger, AFMode, AFOptional, Market
 
 
-class Strategy(XTPStrategy):
+class Strategy(StockStrategy):
 
     def __init__(self):
         super().__init__()

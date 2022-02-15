@@ -5,7 +5,7 @@ import yaml
 import pandas as pd
 
 from A.types import Price, EventType, Event, StrategyType
-from A.types.ctp import Snapshot
+from A.types.futures import Snapshot
 from numpy import char as nchar
 from datetime import datetime
 from ctpwrapper import MdApiPy, ApiStructure
@@ -71,7 +71,7 @@ class MarketSpi(MdApiPy):
     def on_bar(self, bar):
         event = Event()
         event.data = bar
-        event.ex_type = StrategyType.CTP
+        event.ex_type = StrategyType.FUTURES
         event.event_type = EventType.KLINE_DATA
         self._queue.put(event)
 
@@ -177,7 +177,7 @@ class MarketSpi(MdApiPy):
 
         event = Event()
         event.data = tick_data
-        event.ex_type = StrategyType.CTP
+        event.ex_type = StrategyType.FUTURES
         event.event_type = EventType.SNAPSHOT_DATA
         self._queue.put(event)
 
@@ -261,7 +261,7 @@ def start(
 ) -> None:
     """ 创建并启动 CTP 实例
 
-    :param config_path: ctp 配置路径
+    :param config_path: futures 配置路径
     :param queue: 事件驱动消息队列
     :param sub_instrument_id: 需要订阅的合约代码
     :return:
@@ -269,16 +269,16 @@ def start(
     config = yaml.safe_load(open(config_path, encoding="utf-8"))
     market_servers = config["md_server"]
 
-    logger.info("start create the ctp instance.")
+    logger.info("start create the futures instance.")
     market = MarketSpi(config, queue)
     market.Create("./cache")
 
     for server in market_servers:
         market.RegisterFront(server)
-        logger.info(f"ctp front address {server} registered.")
+        logger.info(f"futures front address {server} registered.")
     market.Init()
 
-    logger.info("ctp instance created.")
+    logger.info("futures instance created.")
     trading_day = market.GetTradingDay()
     logger.info(f"<CTP> trading day: {trading_day}")
 
@@ -297,7 +297,7 @@ def start(
         pass
     finally:
         market.save()
-        logger.info("ctp work done.")
+        logger.info("futures work done.")
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-from A.base.strategy.ctp import CTPStrategy
-from A.base.strategy.xtp import XTPStrategy
+from A.base.strategy.futures import FuturesStrategy
+from A.base.strategy.stock import StockStrategy
 from A.base.strategy.base import Strategy
 

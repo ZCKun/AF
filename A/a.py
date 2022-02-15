@@ -48,15 +48,18 @@ class AF:
             optional: AF Optional.
 
         Raises:
-            FileNotFoundError: some config file path not found/exists.
+            FileNotFoundError: config file path not found/exists.
             TypeError: unknown run mode.
         """
         if optional is None:
-            raise TypeError("the optional is None.")
+            raise TypeError("the optional param is None.")
         self._optional: AFOptional = optional
 
-        if self._optional.run_mode != Mode.ONLINE or self._optional.run_mode != Mode.BACKTESTING:
+        if self._optional.run_mode != Mode.ONLINE and self._optional.run_mode != Mode.BACKTESTING:
             raise TypeError("unknown run mode.")
+
+        if os.path.splitext(self._optional.config_path)[-1] not in [".yaml", ".yml"]:
+            raise TypeError("unsupported config file type, please use yaml type.")
 
         if not os.path.exists(self._optional.config_path):
             raise FileNotFoundError(f"config path {self._optional.config_path} not exists.")
@@ -170,7 +173,7 @@ class AF:
         elif event.event_type == EventType.KLINE_DATA:
             self._on_bar(event)
 
-    def _start_with_normal(self) -> None:
+    def _start_with_online(self) -> None:
         start_func = None
         if self._optional.market == Market.STOCK:
             start_func = xtp_start
@@ -180,7 +183,7 @@ class AF:
         process = Process(target=start_func,
                           args=(self._optional.config_path,
                                 self._event_queue,
-                                self._get_symbol_codes(StrategyType.CTP))
+                                self._get_symbol_codes(StrategyType.FUTURES))
                           )
         process.start()
 
@@ -200,10 +203,13 @@ class AF:
         if self._optional.market == Market.STOCK:
             start_func = stock_start
 
+        start_func(self._optional.config_path,
+                   self._event_queue,
+                   self._get_symbol_codes(StrategyType.STOCK))
         process = Process(target=start_func,
                           args=(self._optional.config_path,
                                 self._event_queue,
-                                self._get_symbol_codes(StrategyType.CSV))
+                                self._get_symbol_codes(StrategyType.STOCK))
                           )
         process.start()
 
@@ -219,7 +225,7 @@ class AF:
         logger.info("AFramework start work")
 
         if self._optional.run_mode == Mode.ONLINE:
-            self._start_with_normal()
+            self._start_with_online()
         elif self._optional.run_mode == Mode.BACKTESTING:
             self._start_with_backtesting()
 

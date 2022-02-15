@@ -1,6 +1,8 @@
 from datetime import datetime
 from .base import BaseEntity
 
+from typing import Optional
+
 
 class KLine(BaseEntity):
     """ Kline 是一个K线对象 """
@@ -11,12 +13,11 @@ class KLine(BaseEntity):
         else:
             self.symbol_code: str = ''
             #: K线起点时间
-            self.start_datetime: int = 0
+            self.start_time: Optional[datetime.time] = None
             #: K线终点
-            self.end_datetime: int = 0
+            self.end_time: Optional[datetime.time] = None
             #: K线所对应的时间
-            self.time: int = 0
-            self.datetime: datetime = ...
+            self.time: Optional[datetime.time] = None
             #: k线状态: -1 0 1
             self.style: int = 0
 
