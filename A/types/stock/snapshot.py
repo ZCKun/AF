@@ -1,46 +1,44 @@
 from datetime import datetime
 
-from A.types import BaseEntity, Price
+from A.types import BaseEntity
+from typing import Optional
 
 
 class Snapshot(BaseEntity):
 
-    symbol_code: str
-    data_time: datetime
+    symbol_code: str = ''
+    data_time: Optional[datetime] = None
     # the snapshot data received time
-    recv_time: int
-    exchange_id: int
+    recv_time: int = 0
+    exchange_id: int = 0
     # the trading day date
-    trading_day: int
+    trading_day: int = 0
 
-    pre_close_price: Price
-    open_price: Price
-    high_price: Price
-    low_price: Price
-    last_price: Price
+    pre_close_price: float = float('nan')
+    open_price: float = float('nan')
+    high_price: float = float('nan')
+    low_price: float = float('nan')
+    last_price: float = float('nan')
     # current trade volume
-    trade_volume: int
+    trade_volume: int = 0
     # current trade turnover
-    trade_turnover: Price
+    trade_turnover: float = float('nan')
     # total trade volume on day
-    total_trade_volume: int
+    total_trade_volume: int = 0
     # total trade turnover on day
-    total_trade_turnover: int
-    upper_limit_price: Price
-    lower_limit_price: Price
+    total_trade_turnover: int = 0
+    upper_limit_price: float = float('nan')
+    lower_limit_price: float = float('nan')
 
-    bid: list[Price]
-    ask: list[Price]
-    ask_qty: list[int]
-    bid_qty: list[int]
+    bid: Optional[list[float]] = None
+    ask: Optional[list[float]] = None
+    ask_qty: Optional[list[int]] = None
+    bid_qty: Optional[list[int]] = None
 
-    bid1_qty: list[int]
-    bid1_count: int
-    max_bid1_count: int
+    bid1_qty: Optional[list[int]] = None
+    bid1_count: int = 0
+    max_bid1_count: int = 0
 
-    ask1_qty: list[int]
-    ask1_count: int
-    max_ask1_count: int
-
-    def __init__(self, **data):
-        self.__dict__.update(data)
+    ask1_qty: Optional[list[int]] = None
+    ask1_count: int = 0
+    max_ask1_count: int = 0

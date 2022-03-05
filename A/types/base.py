@@ -1,4 +1,5 @@
 import copy
+import math
 import weakref
 
 from enum import Enum
@@ -9,11 +10,15 @@ class BuySell(Enum):
     Buy = 1
     Sell = 2
 
+
 def get_other_price(other):
     if isinstance(other, Price):
         other = other._price
     elif isinstance(other, float):
-        other = int(other * 1000)
+        if math.isnan(other):
+            other = .0
+        else:
+            other = int(other * 1000)
 
     return other
 
@@ -23,7 +28,7 @@ class Price:
     def __init__(self, value=0):
         try:
             self._price = int(float(value) * 1000)
-        except OverflowError as e:
+        except OverflowError:
             self._price = 0
 
     def __lt__(self, other):
@@ -53,7 +58,9 @@ class Price:
         return self
 
     def __truediv__(self, other):
-        return self._price / get_other_price(other)
+        if (o := get_other_price(other)) == 0:
+            return float("nan")
+        return self._price / o
 
     def __rtruediv__(self, other):
         return get_other_price(other) / self._price

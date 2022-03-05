@@ -1,5 +1,5 @@
 from A.types import KLine, StrategyType
-from A.types.stock import Snapshot
+from A.types.stock import Snapshot, OrderBook
 from .base import Strategy
 
 
@@ -24,3 +24,12 @@ class StockStrategy(Strategy):
         :return:
         """
         raise NotImplementedError
+
+    def on_order_book(self, orderbook: OrderBook):
+        """ OrderBook 数据回调
+
+        :param orderbook: the OrderBook data
+        :return:
+        """
+        raise NotImplementedError
+

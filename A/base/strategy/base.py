@@ -27,3 +27,7 @@ class Strategy(ABC):
 
     def on_snapshot(self, tick):
         raise NotImplementedError
+
+    def on_order_book(self, orderbook):
+        raise NotImplementedError
+

@@ -64,8 +64,9 @@ class AF:
         if not os.path.exists(self._optional.config_path):
             raise FileNotFoundError(f"config path {self._optional.config_path} not exists.")
 
-        self._event_queue = Queue()
+        self._event_queue = Queue(65535)
         self._strategies: list[Strategy] = list()
+        # self._cache_history:
 
         self._bar_data: Optional[pd.DataFrame] = None
 
@@ -95,6 +96,24 @@ class AF:
         else:
             raise TypeError(f"not support strategy type of [{type(strategy)}].")
 
+    def _on_order_book(
+            self,
+            event: Event
+    ) -> None:
+        """
+        Orderbook event callback function
+
+        Args:
+            event: the event message
+        
+        Returns:
+            None
+        """
+        for s in self._strategies:
+            if s.type() == event.ex_type:
+                ob = event.data
+                s.on_order_book(ob)
+
     def _on_bar(
             self,
             event: Event
@@ -111,10 +130,10 @@ class AF:
         for s in self._strategies:
             if s.type() == event.ex_type:
                 bar = event.data
-                if self._bar_data is None:
-                    self._bar_data = pd.DataFrame([bar])
-                else:
-                    self._bar_data = self._bar_data.append(bar.__dict__, ignore_index=True, sort=False)
+                # if self._bar_data is None:
+                #     self._bar_data = pd.DataFrame([bar])
+                # else:
+                #     self._bar_data = self._bar_data.append(bar.__dict__, ignore_index=True, sort=False)
                 s.on_bar(bar)
 
     def _on_snapshot(
@@ -172,6 +191,8 @@ class AF:
             self._on_snapshot(event)
         elif event.event_type == EventType.KLINE_DATA:
             self._on_bar(event)
+        elif event.event_type == EventType.ORDERBOOK_DATA:
+            self._on_order_book(event)
 
     def _start_with_online(self) -> None:
         start_func = None
@@ -203,18 +224,25 @@ class AF:
         if self._optional.market == Market.STOCK:
             start_func = stock_start
 
-        start_func(self._optional.config_path,
-                   self._event_queue,
-                   self._get_symbol_codes(StrategyType.STOCK))
+        # start_func(self._optional.config_path,
+        #            self._event_queue,
+        #            self._get_symbol_codes(StrategyType.STOCK))
         process = Process(target=start_func,
-                          args=(self._optional.config_path,
-                                self._event_queue,
-                                self._get_symbol_codes(StrategyType.STOCK))
+                          args=(
+                              self._optional.config_path,
+                              self._event_queue,
+                              self._get_symbol_codes(StrategyType.STOCK))
                           )
         process.start()
 
-        while int(datetime.now().strftime('%H%M%S')) < self._optional.end_time:
-            event: Event = self._event_queue.get()
+        # while int(datetime.now().strftime('%H%M%S')) < self._optional.end_time:
+        while True:
+            if self._event_queue.empty():
+                continue
+            event = self._event_queue.get()
+            if event == "Done":
+                print("DDDD")
+                break
             if not event:
                 continue
             self._on_event(event)
